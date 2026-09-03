@@ -1,6 +1,6 @@
 # Intranet Distribución - Frontend Web
 
-Cliente web desarrollado en Angular 21 con TypeScript para la gestión de logística, pedidos, almacenes, flota y seguimiento en tiempo real de la intranet de distribución.
+Cliente web desarrollado en Angular 19 con TypeScript para la gestión de logística, pedidos, almacenes, flota y seguimiento en tiempo real de la intranet de distribución.
 
 ---
 
@@ -19,11 +19,6 @@ src/app/
 ├── shared/           # Componentes reutilizables, pipes y directivas
 │   ├── components/
 │   └── pipes/
-│
-├── layout/           # Contenedores de diseño (Sidebar, Header, Main/Auth Layouts)
-│   ├── components/
-│   ├── main-layout/
-│   └── auth-layout/
 │
 ├── features/         # Módulos y vistas principales por requerimiento funcional
 │   ├── auth/         # Login y autenticación
@@ -137,4 +132,4 @@ Desarrollado por el equipo de **Desarrollo Web Integrado - UTP**.
 - Navarro Domínguez, Rommel Eduardo
 - Pujay Narciso, Alinder Steeven
 - Alvarado Chávez, Romina Liz
-- Herrera Gutierreez, Mathias Sebastian
+- Herrera Gutierrez, Mathias Sebastian
