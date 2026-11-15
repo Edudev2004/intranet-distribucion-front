@@ -31,6 +31,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/fleet/fleet.routes').then(m => m.fleetRoutes)
       },
       {
+        path: 'almacenes',
+        loadChildren: () => import('./features/almacenes/almacenes.routes').then(m => m.almacenesRoutes)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
