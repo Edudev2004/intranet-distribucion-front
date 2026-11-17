@@ -39,6 +39,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/mantenimiento/mantenimiento.routes').then(m => m.mantenimientoRoutes)
       },
       {
+        path: 'pedidos',
+        loadChildren: () => import('./features/pedidos/pedidos.routes').then(m => m.pedidosRoutes)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
