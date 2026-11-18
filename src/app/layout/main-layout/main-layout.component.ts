@@ -9,7 +9,10 @@ import { HeaderComponent } from '../components/header/header.component';
   imports: [RouterOutlet, SidebarComponent, HeaderComponent],
   template: `
     <div class="layout-container">
-      <app-sidebar></app-sidebar>
+      <!-- Barra lateral dinámica -->
+      <app-sidebar [(collapsed)]="isSidebarCollapsed"></app-sidebar>
+
+      <!-- Contenedor principal con Header flotante y vista activa -->
       <div class="layout-wrapper">
         <app-header></app-header>
         <main class="main-content">
@@ -22,18 +25,31 @@ import { HeaderComponent } from '../components/header/header.component';
     .layout-container {
       display: flex;
       min-height: 100vh;
-      background-color: #f8fafc;
+      width: 100%;
+      background-color: var(--bg-main, #f1f5f9);
+      position: relative;
     }
+
     .layout-wrapper {
       flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
     }
+
     .main-content {
-      margin-left: 260px;
-      padding: 2rem;
       flex: 1;
+      padding: 24px;
+      position: relative;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 14px;
+      }
     }
   `]
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent {
+  isSidebarCollapsed = false;
+}

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 interface ProgramacionRuta {
   idProgramacion: number;
@@ -19,34 +19,46 @@ interface ProgramacionRuta {
 @Component({
   selector: 'app-distribution-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DatePipe, PageHeaderComponent],
   template: `
-    <div class="p-6">
-      <h2 class="text-2xl font-bold mb-4">Asignación de Vehículo, Conductor y Ruta</h2>
-      
-      <div class="overflow-x-auto bg-white shadow-md rounded-lg">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+    <app-page-header
+      title="Asignación y Despacho de Rutas"
+      subtitle="Control de asignación de vehículos, conductores y estados de entrega">
+    </app-page-header>
+
+    <div class="content-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ruta</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehículo</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conductor</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inicio Programado</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th>ID</th>
+              <th>Ruta</th>
+              <th>Vehículo</th>
+              <th>Conductor</th>
+              <th>Inicio Programado</th>
+              <th>Estado</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            @if (asignaciones.length > 0) {
+          <tbody>
+            @if (cargando) {
+              <tr>
+                <td colspan="6">
+                  <div class="loading-state">
+                    <div class="spinner"></div>
+                    <span>Cargando programaciones...</span>
+                  </div>
+                </td>
+              </tr>
+            } @else if (asignaciones.length > 0) {
               @for (item of asignaciones; track item.idProgramacion) {
                 <tr>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.idProgramacion }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.idRuta }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.idVehiculo }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.idConductor }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.inicioProgramado | date:'short' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                  <td><strong>#{{ item.idProgramacion }}</strong></td>
+                  <td>Ruta #{{ item.idRuta }}</td>
+                  <td>Vehículo #{{ item.idVehiculo }}</td>
+                  <td>Conductor #{{ item.idConductor }}</td>
+                  <td>{{ item.inicioProgramado | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    <span class="badge" [class.warn]="item.idEstadoProgramacion === 1">
                       {{ item.estadoProgramacion }}
                     </span>
                   </td>
@@ -54,7 +66,7 @@ interface ProgramacionRuta {
               }
             } @else {
               <tr>
-                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+                <td colspan="6" class="empty-state">
                   No hay asignaciones registradas.
                 </td>
               </tr>
@@ -63,25 +75,37 @@ interface ProgramacionRuta {
         </table>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .table-wrap {
+      overflow-x: auto;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 2rem !important;
+      color: #64748b;
+    }
+  `]
 })
 export class DistributionListPage implements OnInit {
   private http = inject(HttpClient);
   asignaciones: ProgramacionRuta[] = [];
+  cargando = false;
 
   ngOnInit() {
     this.cargarAsignaciones();
   }
 
   cargarAsignaciones() {
-    // Apunta directamente a tu API con el interceptor de autenticación activo
+    this.cargando = true;
     this.http.get<ProgramacionRuta[]>('http://localhost:8080/api/v1/programacion-rutas').subscribe({
       next: (data) => {
-        console.log('Datos recibidos de programacion-rutas:', data);
-        this.asignaciones = data;
+        this.asignaciones = data ?? [];
+        this.cargando = false;
       },
       error: (err) => {
         console.error('Error al cargar las programaciones de ruta:', err);
+        this.cargando = false;
       }
     });
   }

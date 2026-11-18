@@ -79,10 +79,6 @@ import {
         </label>
       </div>
 
-      @if (cargando()) {
-        <p>Cargando...</p>
-      }
-
       <table class="data-table">
         <thead>
           <tr>
@@ -91,7 +87,17 @@ import {
           </tr>
         </thead>
         <tbody>
-          @for (a of almacenes(); track a.idAlmacen) {
+                      @if (cargando()) {
+              <tr>
+                <td colspan="8">
+                  <div class="loading-state">
+                    <div class="spinner"></div>
+                    <span>Cargando información...</span>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+            @for (a of almacenes(); track a.idAlmacen) {
             <tr>
               <td>{{ a.idAlmacen }}</td>
               <td><strong>{{ a.nombre }}</strong></td>
@@ -107,11 +113,10 @@ import {
               </td>
             </tr>
           } @empty {
-            @if (!cargando()) {
-              <tr><td colspan="8">No hay almacenes registrados.</td></tr>
+                <tr><td colspan="8">No hay almacenes registrados.</td></tr>
+              }
             }
-          }
-        </tbody>
+          </tbody>
       </table>
     </div>
 
@@ -138,8 +143,8 @@ import {
   `,
   styles: [`
     .content-card { background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 1rem; }
-    .btn-primary { padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    .btn-secondary { padding: 0.5rem 1rem; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; }
+    .btn-primary { padding: 0.5rem 1rem; background: var(--primary-color, #18d600); color: #052e16; border: none; border-radius: 9px; box-shadow: 0 4px 12px var(--primary-glow); font-weight: 600; cursor: pointer; }
+    .btn-secondary { padding: 0.5rem 1rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9px; color: #334155; font-weight: 600; cursor: pointer; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end; }
     .form-grid label, .toolbar label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #475569; }
     .form-grid input, .form-grid select, .toolbar select { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; }
