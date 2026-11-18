@@ -48,6 +48,14 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           <span class="nav-icon">🧾</span>
           <span class="nav-label">Pedidos</span>
         </a>
+        <a routerLink="/app/facturacion" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Facturación</span>
+        </a>
+        <a routerLink="/app/reportes" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">📑</span>
+          <span class="nav-label">Reportes</span>
+        </a>
       </nav>
     </aside>
   `,
