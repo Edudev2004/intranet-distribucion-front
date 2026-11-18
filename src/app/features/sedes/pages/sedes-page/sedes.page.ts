@@ -1,0 +1,1249 @@
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { SedesService } from '../../sedes.service';
+import { ResponsableSede, Sede, SedeRequest } from '../../sede.model';
+
+@Component({
+  selector: 'app-sedes-page',
+  standalone: true,
+  imports: [CommonModule, FormsModule, PageHeaderComponent, IconComponent],
+  template: `
+    <app-page-header
+      title="Gestión de Sedes y Centros Operativos"
+      subtitle="Administración de hubs de distribución, almacenes asociados y personal responsable"
+    >
+      <button type="button" class="btn-primary" (click)="abrirModalCrear()">
+        <app-icon name="plus" [size]="18"></app-icon>
+        <span>+ Nueva Sede</span>
+      </button>
+    </app-page-header>
+
+    @if (mensaje()) {
+      <div class="alert ok">
+        <app-icon name="check-circle" [size]="18"></app-icon>
+        <span>{{ mensaje() }}</span>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="alert err">
+        <app-icon name="alert" [size]="18"></app-icon>
+        <span>{{ error() }}</span>
+      </div>
+    }
+
+    <!-- Métricas y Estadísticas Rápidas -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon icon-hub">
+          <app-icon name="warehouse" [size]="22"></app-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ sedes().length }}</span>
+          <span class="stat-label">Total de Sedes</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-active">
+          <app-icon name="truck" [size]="22"></app-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ sedesActivasCount() }}</span>
+          <span class="stat-label">Sedes Operativas</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-almacenes">
+          <app-icon name="inventory" [size]="22"></app-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ totalAlmacenesCount() }}</span>
+          <span class="stat-label">Almacenes Vinculados</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-usuarios">
+          <app-icon name="users" [size]="22"></app-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ totalUsuariosCount() }}</span>
+          <span class="stat-label">Colaboradores</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Herramientas y Filtros -->
+    <div class="content-card toolbar-card">
+      <div class="search-box">
+        <app-icon name="search" [size]="18"></app-icon>
+        <input
+          type="text"
+          placeholder="Buscar sede por nombre o dirección..."
+          [(ngModel)]="busqueda"
+        />
+      </div>
+
+      <div class="filters-group">
+        <select [(ngModel)]="filtroEstado">
+          <option value="todos">Todos los estados</option>
+          <option value="activos">Solo activas</option>
+          <option value="inactivos">Solo inactivas</option>
+        </select>
+
+        <div class="view-toggle">
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="viewMode() === 'grid'"
+            (click)="viewMode.set('grid')"
+            title="Vista en tarjetas visuales"
+          >
+            <app-icon name="dashboard" [size]="17"></app-icon>
+            <span>Tarjetas</span>
+          </button>
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="viewMode() === 'table'"
+            (click)="viewMode.set('table')"
+            title="Vista en tabla densa"
+          >
+            <app-icon name="invoice" [size]="17"></app-icon>
+            <span>Tabla</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado de Carga -->
+    @if (cargando()) {
+      <div class="content-card loading-container">
+        <div class="spinner"></div>
+        <span>Cargando sedes operativas...</span>
+      </div>
+    } @else {
+      <!-- VISTA EN TARJETAS (CARDS GRID CON FOTO) -->
+      @if (viewMode() === 'grid') {
+        @if (sedesFiltradas().length > 0) {
+          <div class="sedes-grid">
+            @for (s of sedesFiltradas(); track s.idSede) {
+              <div class="sede-card" [class.inactive]="!s.activo">
+                <!-- Portada con Imagen y Badge flotante -->
+                <div class="card-cover">
+                  <img
+                    [src]="obtenerFotoSede(s)"
+                    [alt]="s.nombre"
+                    class="cover-image"
+                    loading="lazy"
+                  />
+                  <div class="cover-overlay"></div>
+                  <span class="status-pill" [class.active]="s.activo">
+                    <span class="status-dot"></span>
+                    {{ s.activo ? 'Operativa' : 'Inactiva' }}
+                  </span>
+                  <div class="sede-id-tag">ID #{{ s.idSede }}</div>
+                </div>
+
+                <!-- Contenido de la Tarjeta -->
+                <div class="card-body">
+                  <h3 class="sede-title">{{ s.nombre }}</h3>
+
+                  <div class="sede-address">
+                    <app-icon name="truck" [size]="16"></app-icon>
+                    <span>{{ s.direccion }}</span>
+                  </div>
+
+                  <!-- Responsable -->
+                  <div class="responsable-box">
+                    <div class="avatar-circle">
+                      {{ obtenerIniciales(s.nombreResponsable) }}
+                    </div>
+                    <div class="responsable-details">
+                      <span class="resp-label">Encargado de Sede</span>
+                      <strong class="resp-name">{{ s.nombreResponsable || 'Sin responsable asignado' }}</strong>
+                      @if (s.correoResponsable) {
+                        <small class="resp-email">{{ s.correoResponsable }}</small>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Métricas / Badges de la sede -->
+                  <div class="sede-badges">
+                    <span class="metric-badge" title="Almacenes en esta sede">
+                      <app-icon name="inventory" [size]="15"></app-icon>
+                      <strong>{{ s.totalAlmacenes }}</strong> almacenes
+                    </span>
+                    <span class="metric-badge" title="Usuarios asignados">
+                      <app-icon name="users" [size]="15"></app-icon>
+                      <strong>{{ s.totalUsuarios }}</strong> usuarios
+                    </span>
+                  </div>
+
+                  <!-- Acciones -->
+                  <div class="card-actions">
+                    <button type="button" class="btn-action edit" (click)="abrirModalEditar(s)" title="Editar información">
+                      <app-icon name="wrench" [size]="15"></app-icon>
+                      <span>Editar</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action toggle"
+                      [class.danger-text]="s.activo"
+                      (click)="alternarEstado(s)"
+                      [title]="s.activo ? 'Desactivar sede' : 'Activar sede'"
+                    >
+                      <app-icon [name]="s.activo ? 'alert' : 'check-circle'" [size]="15"></app-icon>
+                      <span>{{ s.activo ? 'Desactivar' : 'Activar' }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-action delete"
+                      [disabled]="s.totalAlmacenes > 0 || s.totalUsuarios > 0"
+                      (click)="eliminarSede(s)"
+                      title="Eliminar sede (Solo si no tiene registros vinculados)"
+                    >
+                      <app-icon name="alert" [size]="15"></app-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="content-card empty-card">
+            <app-icon name="warehouse" [size]="48"></app-icon>
+            <h3>No se encontraron sedes</h3>
+            <p>No hay sedes que coincidan con los filtros de búsqueda actuales.</p>
+            <button type="button" class="btn-secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+          </div>
+        }
+      }
+
+      <!-- VISTA EN TABLA TRADICIONAL -->
+      @if (viewMode() === 'table') {
+        <div class="content-card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre de Sede</th>
+                  <th>Dirección</th>
+                  <th>Responsable</th>
+                  <th>Almacenes</th>
+                  <th>Usuarios</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of sedesFiltradas(); track s.idSede) {
+                  <tr>
+                    <td><strong>#{{ s.idSede }}</strong></td>
+                    <td>
+                      <div class="table-sede-info">
+                        <img [src]="obtenerFotoSede(s)" class="mini-thumb" alt="" />
+                        <strong>{{ s.nombre }}</strong>
+                      </div>
+                    </td>
+                    <td>{{ s.direccion }}</td>
+                    <td>{{ s.nombreResponsable || '-' }}</td>
+                    <td><span class="badge">{{ s.totalAlmacenes }}</span></td>
+                    <td><span class="badge">{{ s.totalUsuarios }}</span></td>
+                    <td>
+                      <span class="badge" [class.off]="!s.activo">
+                        {{ s.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                    <td class="row-actions">
+                      <button type="button" (click)="abrirModalEditar(s)">Editar</button>
+                      <button type="button" (click)="alternarEstado(s)">
+                        {{ s.activo ? 'Desactivar' : 'Activar' }}
+                      </button>
+                      @if (s.totalAlmacenes === 0 && s.totalUsuarios === 0) {
+                        <button type="button" class="danger" (click)="eliminarSede(s)">Eliminar</button>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8" class="text-center">No hay sedes registradas.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- MODAL DE CREACIÓN / EDICIÓN CON PREVIEW DE FOTO -->
+    @if (mostrarModal()) {
+      <div class="modal-backdrop" (click)="cerrarModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>{{ editandoId() === null ? 'Registrar Nueva Sede' : 'Editar Sede' }}</h3>
+            <button type="button" class="close-btn" (click)="cerrarModal()">✕</button>
+          </div>
+
+          <form #f="ngForm" (ngSubmit)="guardarSede()">
+            <div class="modal-body">
+              <!-- Previsualización de Imagen / Supabase Storage -->
+              <div class="image-preview-section">
+                <div class="preview-box">
+                  <img
+                    [src]="formFotoUrl || fotoPlaceholder"
+                    alt="Previsualización"
+                    class="preview-img"
+                    (error)="formFotoUrl = fotoPlaceholder"
+                  />
+                  <div class="preview-badge">Vista previa (Supabase / Storage)</div>
+                </div>
+                <div class="preview-input">
+                  <label>
+                    URL de la Fotografía (Supabase Storage o Web)
+                    <input
+                      type="url"
+                      name="fotoUrl"
+                      placeholder="https://xyz.supabase.co/storage/v1/object/public/sedes/sede-01.jpg"
+                      [(ngModel)]="formFotoUrl"
+                    />
+                  </label>
+                  <small class="help-text">
+                    💡 Si aún no tienes la URL de Supabase, puedes dejarlo vacío y el sistema asignará una portada logística moderna por defecto.
+                  </small>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <label>
+                  Nombre de la Sede *
+                  <input
+                    type="text"
+                    name="nombre"
+                    required
+                    minlength="2"
+                    maxlength="100"
+                    placeholder="Ej. Centro de Distribución Sur - Lurín"
+                    [(ngModel)]="form.nombre"
+                    #nombreCtrl="ngModel"
+                  />
+                  @if (nombreCtrl.invalid && nombreCtrl.touched) {
+                    <small class="field-error">El nombre es obligatorio (mínimo 2 caracteres).</small>
+                  }
+                </label>
+
+                <label>
+                  Dirección Física *
+                  <input
+                    type="text"
+                    name="direccion"
+                    required
+                    minlength="3"
+                    maxlength="255"
+                    placeholder="Ej. Av. Antigua Panamericana Sur Km 35"
+                    [(ngModel)]="form.direccion"
+                    #dirCtrl="ngModel"
+                  />
+                  @if (dirCtrl.invalid && dirCtrl.touched) {
+                    <small class="field-error">La dirección es obligatoria.</small>
+                  }
+                </label>
+
+                <label>
+                  Responsable / Encargado de Sede
+                  <select name="idResponsable" [(ngModel)]="form.idResponsable">
+                    <option [ngValue]="null">-- Sin responsable asignado --</option>
+                    @for (r of responsables(); track r.idUsuario) {
+                      <option [ngValue]="r.idUsuario">
+                        {{ r.nombreCompleto }} ({{ r.rol }})
+                      </option>
+                    }
+                  </select>
+                </label>
+
+                <div class="checkbox-group">
+                  <label class="custom-checkbox">
+                    <input type="checkbox" name="activo" [(ngModel)]="form.activo" />
+                    <span>Sede operativa y activa</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+              <button type="submit" class="btn-primary" [disabled]="f.invalid || guardando()">
+                @if (guardando()) {
+                  <span>Guardando...</span>
+                } @else {
+                  <span>{{ editandoId() === null ? 'Crear Sede' : 'Actualizar Sede' }}</span>
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  `,
+  styles: [`
+    :host {
+      display: block;
+    }
+
+    /* ── STATS CARDS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+    }
+
+    .icon-hub { background: linear-gradient(135deg, #0b1120 0%, #1e293b 100%); }
+    .icon-active { background: linear-gradient(135deg, #16a34a 0%, #18d600 100%); }
+    .icon-almacenes { background: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%); }
+    .icon-usuarios { background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); }
+
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0.5rem 0.85rem;
+      flex: 1;
+      max-width: 400px;
+      color: #64748b;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .filters-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .filters-group select {
+      padding: 0.55rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      font-size: 14px;
+      background: #ffffff;
+      color: #334155;
+      font-weight: 500;
+    }
+
+    .view-toggle {
+      display: flex;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 9px;
+      gap: 3px;
+    }
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ── GRID DE TARJETAS ── */
+    .sedes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .sede-card {
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .sede-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    .sede-card.inactive {
+      opacity: 0.75;
+      border-style: dashed;
+    }
+
+    .card-cover {
+      position: relative;
+      height: 160px;
+      background: #0b1120;
+      overflow: hidden;
+    }
+
+    .cover-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .sede-card:hover .cover-image {
+      transform: scale(1.05);
+    }
+
+    .cover-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(11, 17, 32, 0.2) 0%, rgba(11, 17, 32, 0.8) 100%);
+    }
+
+    .status-pill {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(239, 68, 68, 0.85);
+      color: #ffffff;
+      backdrop-filter: blur(8px);
+    }
+
+    .status-pill.active {
+      background: rgba(24, 214, 0, 0.9);
+      color: #052e16;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .sede-id-tag {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #ffffff;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 2px 8px;
+      border-radius: 6px;
+      backdrop-filter: blur(6px);
+      letter-spacing: 0.5px;
+    }
+
+    .card-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .sede-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 6px;
+      line-height: 1.3;
+    }
+
+    .sede-address {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+    }
+
+    .sede-address app-icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: #94a3b8;
+    }
+
+    /* Responsable */
+    .responsable-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 1rem;
+      border: 1px solid #f1f5f9;
+    }
+
+    .avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #0b1120;
+      color: #18d600;
+      font-weight: 800;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .responsable-details {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .resp-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.04em;
+    }
+
+    .resp-name {
+      font-size: 13px;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .resp-email {
+      font-size: 11px;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Badges */
+    .sede-badges {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .metric-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: #f1f5f9;
+      color: #334155;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .metric-badge strong {
+      color: #0f172a;
+    }
+
+    /* Acciones */
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 1rem;
+    }
+
+    .btn-action {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .btn-action.toggle.danger-text:hover {
+      color: #dc2626;
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+
+    .btn-action.delete {
+      flex: 0 0 36px;
+      padding: 0;
+      color: #dc2626;
+      border-color: #fee2e2;
+    }
+
+    .btn-action.delete:hover:not(:disabled) {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
+    .btn-action.delete:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* Tabla */
+    .table-sede-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mini-thumb {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    /* Loading & Empty */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      gap: 1rem;
+      color: #64748b;
+    }
+
+    .empty-card {
+      text-align: center;
+      padding: 4rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      color: #64748b;
+    }
+
+    .empty-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 17, 32, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      color: #94a3b8;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    /* Preview Foto */
+    .image-preview-section {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      align-items: center;
+    }
+
+    .preview-box {
+      position: relative;
+      width: 130px;
+      height: 90px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #0b1120;
+    }
+
+    .preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-badge {
+      position: absolute;
+      bottom: 0;
+      inset-inline: 0;
+      background: rgba(0, 0, 0, 0.65);
+      color: #ffffff;
+      font-size: 9px;
+      text-align: center;
+      padding: 2px 4px;
+    }
+
+    .preview-input {
+      flex: 1;
+    }
+
+    .preview-input label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .preview-input input {
+      padding: 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .help-text {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+      line-height: 1.4;
+      display: block;
+    }
+
+    .form-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .form-grid input, .form-grid select {
+      padding: 0.65rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .field-error {
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .custom-checkbox {
+      flex-direction: row !important;
+      align-items: center;
+      gap: 8px !important;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .custom-checkbox input {
+      width: 18px;
+      height: 18px;
+      accent-color: #18d600;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      background: #f8fafc;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  `]
+})
+export class SedesPageComponent implements OnInit {
+  private service = inject(SedesService);
+
+  sedes = signal<Sede[]>([]);
+  responsables = signal<ResponsableSede[]>([]);
+  cargando = signal(false);
+  guardando = signal(false);
+  mensaje = signal('');
+  error = signal('');
+
+  busqueda = '';
+  filtroEstado = 'todos';
+  viewMode = signal<'grid' | 'table'>('grid');
+
+  mostrarModal = signal(false);
+  editandoId = signal<number | null>(null);
+
+  fotoPlaceholder = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80';
+  formFotoUrl = '';
+
+  form: SedeRequest = {
+    nombre: '',
+    direccion: '',
+    idResponsable: null,
+    activo: true,
+  };
+
+  // Fotos de almacenes/sedes para rotar según el ID de la sede
+  private fallbackPhotos = [
+    'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1565891741441-64926e441838?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80'
+  ];
+
+  // Map local para recordar fotos asignadas
+  private photoCache = new Map<number, string>();
+
+  sedesActivasCount = computed(() => this.sedes().filter(s => s.activo).length);
+  totalAlmacenesCount = computed(() => this.sedes().reduce((acc, s) => acc + (s.totalAlmacenes || 0), 0));
+  totalUsuariosCount = computed(() => this.sedes().reduce((acc, s) => acc + (s.totalUsuarios || 0), 0));
+
+  sedesFiltradas = computed(() => {
+    let list = this.sedes();
+
+    if (this.filtroEstado === 'activos') {
+      list = list.filter(s => s.activo);
+    } else if (this.filtroEstado === 'inactivos') {
+      list = list.filter(s => !s.activo);
+    }
+
+    const q = this.busqueda.trim().toLowerCase();
+    if (q) {
+      list = list.filter(s =>
+        s.nombre.toLowerCase().includes(q) ||
+        s.direccion.toLowerCase().includes(q) ||
+        (s.nombreResponsable && s.nombreResponsable.toLowerCase().includes(q))
+      );
+    }
+
+    return list;
+  });
+
+  ngOnInit(): void {
+    this.cargarDatos();
+  }
+
+  cargarDatos(): void {
+    this.cargando.set(true);
+    this.service.listar(false).subscribe({
+      next: (data) => {
+        this.sedes.set(data);
+        this.cargando.set(false);
+      },
+      error: (err) => {
+        this.cargando.set(false);
+        this.mostrarError(err, 'No se pudieron cargar las sedes');
+      }
+    });
+
+    this.service.responsables().subscribe({
+      next: (data) => this.responsables.set(data),
+      error: (err) => console.warn('No se pudieron cargar los responsables de sede', err)
+    });
+  }
+
+  obtenerFotoSede(sede: Sede): string {
+    if (sede.fotoUrl) return sede.fotoUrl;
+    if (this.photoCache.has(sede.idSede)) return this.photoCache.get(sede.idSede)!;
+    
+    // Asignar una foto consistente por ID
+    const index = Math.abs(sede.idSede) % this.fallbackPhotos.length;
+    const photo = this.fallbackPhotos[index];
+    this.photoCache.set(sede.idSede, photo);
+    return photo;
+  }
+
+  obtenerIniciales(nombre: string | null): string {
+    if (!nombre) return 'SD';
+    const parts = nombre.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return nombre.substring(0, 2).toUpperCase();
+  }
+
+  abrirModalCrear(): void {
+    this.limpiarAvisos();
+    this.editandoId.set(null);
+    this.formFotoUrl = '';
+    this.form = {
+      nombre: '',
+      direccion: '',
+      idResponsable: null,
+      activo: true,
+    };
+    this.mostrarModal.set(true);
+  }
+
+  abrirModalEditar(sede: Sede): void {
+    this.limpiarAvisos();
+    this.editandoId.set(sede.idSede);
+    this.formFotoUrl = this.photoCache.get(sede.idSede) || sede.fotoUrl || '';
+    this.form = {
+      nombre: sede.nombre,
+      direccion: sede.direccion,
+      idResponsable: sede.idResponsable,
+      activo: sede.activo,
+    };
+    this.mostrarModal.set(true);
+  }
+
+  cerrarModal(): void {
+    this.mostrarModal.set(false);
+    this.editandoId.set(null);
+  }
+
+  guardarSede(): void {
+    this.limpiarAvisos();
+    this.guardando.set(true);
+
+    const id = this.editandoId();
+    if (id === null) {
+      this.service.crear(this.form).subscribe({
+        next: (nueva) => {
+          if (this.formFotoUrl) {
+            this.photoCache.set(nueva.idSede, this.formFotoUrl);
+          }
+          this.guardando.set(false);
+          this.cerrarModal();
+          this.mensaje.set(`Sede "${nueva.nombre}" registrada exitosamente.`);
+          this.cargarDatos();
+        },
+        error: (err) => {
+          this.guardando.set(false);
+          this.mostrarError(err, 'No se pudo crear la sede');
+        }
+      });
+    } else {
+      this.service.actualizar(id, this.form).subscribe({
+        next: (act) => {
+          if (this.formFotoUrl) {
+            this.photoCache.set(act.idSede, this.formFotoUrl);
+          }
+          this.guardando.set(false);
+          this.cerrarModal();
+          this.mensaje.set(`Sede "${act.nombre}" actualizada exitosamente.`);
+          this.cargarDatos();
+        },
+        error: (err) => {
+          this.guardando.set(false);
+          this.mostrarError(err, 'No se pudo actualizar la sede');
+        }
+      });
+    }
+  }
+
+  alternarEstado(sede: Sede): void {
+    const nuevoEstado = !sede.activo;
+    const accion = nuevoEstado ? 'activar' : 'desactivar';
+
+    if (!confirm(`¿Está seguro de que desea ${accion} la sede "${sede.nombre}"?`)) {
+      return;
+    }
+
+    this.limpiarAvisos();
+    this.service.cambiarEstado(sede.idSede, nuevoEstado).subscribe({
+      next: (resp) => {
+        this.mensaje.set(`La sede "${resp.nombre}" ahora está ${resp.activo ? 'activa' : 'inactiva'}.`);
+        this.cargarDatos();
+      },
+      error: (err) => this.mostrarError(err, `No se pudo ${accion} la sede`)
+    });
+  }
+
+  eliminarSede(sede: Sede): void {
+    if (sede.totalAlmacenes > 0 || sede.totalUsuarios > 0) {
+      alert('No se puede eliminar una sede que tiene almacenes o colaboradores vinculados.');
+      return;
+    }
+
+    if (!confirm(`¿Desea eliminar definitivamente la sede "${sede.nombre}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    this.limpiarAvisos();
+    this.service.eliminar(sede.idSede).subscribe({
+      next: () => {
+        this.mensaje.set(`Sede "${sede.nombre}" eliminada correctamente.`);
+        this.cargarDatos();
+      },
+      error: (err) => this.mostrarError(err, 'No se pudo eliminar la sede')
+    });
+  }
+
+  limpiarFiltros(): void {
+    this.busqueda = '';
+    this.filtroEstado = 'todos';
+  }
+
+  private limpiarAvisos(): void {
+    this.mensaje.set('');
+    this.error.set('');
+  }
+
+  private mostrarError(err: HttpErrorResponse, porDefecto: string): void {
+    const detalle = err.error?.mensaje ?? err.error?.message;
+    this.error.set(detalle ? `${porDefecto}: ${detalle}` : `${porDefecto} (HTTP ${err.status})`);
+  }
+}

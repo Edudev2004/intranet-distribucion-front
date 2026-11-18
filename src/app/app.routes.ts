@@ -47,6 +47,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/programacion-rutas/programacion-rutas.routes').then(m => m.programacionRutasRoutes)
       },
       {
+        path: 'sedes',
+        loadChildren: () => import('./features/sedes/sedes.routes').then(m => m.sedesRoutes)
+      },
+      {
         path: 'almacenes',
         loadChildren: () => import('./features/almacenes/almacenes.routes').then(m => m.almacenesRoutes)
       },
