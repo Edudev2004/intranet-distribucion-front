@@ -6,27 +6,21 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet],
   template: `
-    <div class="auth-container">
-      <div class="auth-box">
-        <router-outlet></router-outlet>
-      </div>
+    <div class="auth-wrapper">
+      <router-outlet></router-outlet>
     </div>
   `,
   styles: [`
-    .auth-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    }
-    .auth-box {
+    :host {
+      display: block;
       width: 100%;
-      max-width: 420px;
-      padding: 2.5rem;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      min-height: 100vh;
+    }
+    .auth-wrapper {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
   `]
 })

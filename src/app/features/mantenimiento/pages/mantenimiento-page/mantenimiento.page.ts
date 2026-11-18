@@ -73,7 +73,17 @@ import {
           <tr><th>Placa</th><th>Marca / Modelo</th><th>Capacidad (kg)</th><th>Estado</th></tr>
         </thead>
         <tbody>
-          @for (v of vehiculos(); track v.idVehiculo) {
+                      @if (cargando()) {
+              <tr>
+                <td colspan="9">
+                  <div class="loading-state">
+                    <div class="spinner"></div>
+                    <span>Cargando información...</span>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+            @for (v of vehiculos(); track v.idVehiculo) {
             <tr>
               <td><strong>{{ v.placa }}</strong></td>
               <td>{{ v.marca ?? '-' }} {{ v.modelo ?? '' }}</td>
@@ -81,64 +91,17 @@ import {
               <td><span class="badge" [class.warn]="v.estado === 'En mantenimiento'">{{ v.estado }}</span></td>
             </tr>
           } @empty {
-            <tr><td colspan="4">No hay vehículos registrados.</td></tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="content-card">
-      <div class="toolbar">
-        <label>Filtrar por vehículo
-          <select [ngModel]="filtroVehiculo" (ngModelChange)="filtrar($event)" name="filtroVehiculo">
-            <option [ngValue]="null">Todos</option>
-            @for (v of vehiculos(); track v.idVehiculo) {
-              <option [ngValue]="v.idVehiculo">{{ v.placa }}</option>
+                <tr><td colspan="9">No hay mantenimientos registrados.</td></tr>
+              }
             }
-          </select>
-        </label>
-      </div>
-
-      @if (cargando()) {
-        <p>Cargando...</p>
-      }
-
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th><th>Vehículo</th><th>Tipo</th><th>Inicio</th><th>Fin</th>
-            <th>Costo</th><th>Descripción</th><th>Vigencia</th><th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (m of mantenimientos(); track m.idMantenimiento) {
-            <tr>
-              <td>{{ m.idMantenimiento }}</td>
-              <td><strong>{{ m.placa }}</strong></td>
-              <td>{{ m.tipoMantenimiento }}</td>
-              <td>{{ m.fechaInicio }}</td>
-              <td>{{ m.fechaFin }}</td>
-              <td>{{ m.costo ?? '-' }}</td>
-              <td>{{ m.descripcion ?? '-' }}</td>
-              <td><span class="badge" [class.warn]="m.vigente">{{ m.vigente ? 'Vigente' : 'No vigente' }}</span></td>
-              <td class="row-actions">
-                <button (click)="editar(m)">Editar</button>
-                <button class="danger" (click)="eliminar(m)">Eliminar</button>
-              </td>
-            </tr>
-          } @empty {
-            @if (!cargando()) {
-              <tr><td colspan="9">No hay mantenimientos registrados.</td></tr>
-            }
-          }
-        </tbody>
+          </tbody>
       </table>
     </div>
   `,
   styles: [`
     .content-card { background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 1rem; }
-    .btn-primary { padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    .btn-secondary { padding: 0.5rem 1rem; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; }
+    .btn-primary { padding: 0.5rem 1rem; background: var(--primary-color, #18d600); color: #052e16; border: none; border-radius: 9px; box-shadow: 0 4px 12px var(--primary-glow); font-weight: 600; cursor: pointer; }
+    .btn-secondary { padding: 0.5rem 1rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9px; color: #334155; font-weight: 600; cursor: pointer; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end; }
     .form-grid label, .toolbar label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #475569; }
     .form-grid input, .form-grid select, .toolbar select { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; }
