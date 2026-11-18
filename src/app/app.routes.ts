@@ -74,12 +74,20 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'error/500',
+    loadComponent: () => import('./features/error/pages/server-error/server-error.page').then(m => m.ServerErrorPageComponent)
+  },
+  {
+    path: 'error/404',
+    loadComponent: () => import('./features/error/pages/not-found/not-found.page').then(m => m.NotFoundPageComponent)
+  },
+  {
     path: '',
     redirectTo: 'auth/login',
     pathMatch: 'full'
   },
   {
     path: '**',
-    redirectTo: 'auth/login'
+    loadComponent: () => import('./features/error/pages/not-found/not-found.page').then(m => m.NotFoundPageComponent)
   }
 ];
