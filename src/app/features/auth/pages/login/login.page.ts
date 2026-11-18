@@ -1,6 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/services/auth.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-login-page',
@@ -14,7 +16,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
     <form (ngSubmit)="onLogin()" class="login-form">
       <div class="form-group">
-        <label for="username">Usuario / Código</label>
+        <label for="username">Correo electrónico</label>
         <input 
           type="text" 
           id="username" 
@@ -37,7 +39,10 @@ import { AuthService } from '../../../../core/services/auth.service';
         />
       </div>
 
-      <button type="submit" class="btn-primary">Iniciar Sesión</button>
+      @if (error) {
+        <p class="error-msg">{{ error }}</p>
+      }
+      <button type="submit" class="btn-primary" [disabled]="cargando">Iniciar Sesión</button>
     </form>
   `,
   styles: [`
@@ -75,6 +80,11 @@ import { AuthService } from '../../../../core/services/auth.service';
       border-radius: 8px;
       font-size: 0.95rem;
     }
+    .error-msg {
+      color: #b91c1c;
+      font-size: 0.85rem;
+      margin: 0 0 0.75rem;
+    }
     .btn-primary {
       padding: 0.75rem;
       background-color: #2563eb;
@@ -94,18 +104,34 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class LoginPageComponent {
   username = '';
   password = '';
+  error = '';
+  cargando = false;
 
   private authService = inject(AuthService);
+  private http = inject(HttpClient);
 
   onLogin(): void {
-    if (this.username && this.password) {
-      this.authService.login({
-        id: '1',
-        username: this.username,
-        email: `${this.username.toLowerCase()}@distribucion.com`,
-        fullName: 'Operador de Despacho',
-        role: 'DISPATCHER'
-      }, 'mock-jwt-token-xyz');
+    if (!this.username || !this.password) {
+      return;
     }
+    this.error = '';
+    this.cargando = true;
+    const body = { email: this.username.trim(), password: this.password };
+    this.http.post<{ accessToken: string }>(`${environment.apiUrl}/auth/login`, body).subscribe({
+      next: res => {
+        this.cargando = false;
+        this.authService.login({
+          id: '0',
+          username: body.email,
+          email: body.email,
+          fullName: body.email,
+          role: 'ADMIN'
+        }, res.accessToken);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.cargando = false;
+        this.error = err.error?.message ?? 'Usuario o contraseña incorrectos';
+      },
+    });
   }
 }

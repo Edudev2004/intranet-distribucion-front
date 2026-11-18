@@ -31,6 +31,18 @@ export const routes: Routes = [
         loadChildren: () => import('./features/fleet/fleet.routes').then(m => m.fleetRoutes)
       },
       {
+        path: 'almacenes',
+        loadChildren: () => import('./features/almacenes/almacenes.routes').then(m => m.almacenesRoutes)
+      },
+      {
+        path: 'mantenimiento',
+        loadChildren: () => import('./features/mantenimiento/mantenimiento.routes').then(m => m.mantenimientoRoutes)
+      },
+      {
+        path: 'pedidos',
+        loadChildren: () => import('./features/pedidos/pedidos.routes').then(m => m.pedidosRoutes)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'

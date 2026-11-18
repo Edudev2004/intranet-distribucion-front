@@ -28,6 +28,18 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           <span class="nav-icon">🚛</span>
           <span class="nav-label">Flota & Choferes</span>
         </a>
+        <a routerLink="/app/almacenes" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">🏭</span>
+          <span class="nav-label">Almacenes</span>
+        </a>
+        <a routerLink="/app/mantenimiento" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">🛠️</span>
+          <span class="nav-label">Mantenimiento</span>
+        </a>
+        <a routerLink="/app/pedidos" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">🧾</span>
+          <span class="nav-label">Pedidos</span>
+        </a>
       </nav>
     </aside>
   `,
