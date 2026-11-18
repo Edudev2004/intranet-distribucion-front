@@ -328,6 +328,7 @@ export class SidebarComponent {
   navItems: NavItem[] = [
     { label: 'Dashboard', route: '/app/dashboard', icon: 'dashboard' },
     { label: 'Usuarios', route: '/app/usuarios', icon: 'users' },
+    { label: 'Programación de Rutas', route: '/app/programacion-rutas', icon: 'truck' },
     { label: 'Almacenes', route: '/app/almacenes', icon: 'warehouse' },
     { label: 'Categorías', route: '/app/categorias', icon: 'tag' },
     { label: 'Pedidos', route: '/app/pedidos', icon: 'orders' },

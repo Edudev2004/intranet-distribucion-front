@@ -43,6 +43,10 @@ export const routes: Routes = [
         loadChildren: () => import('./features/fleet/fleet.routes').then(m => m.fleetRoutes)
       },
       {
+        path: 'programacion-rutas',
+        loadChildren: () => import('./features/programacion-rutas/programacion-rutas.routes').then(m => m.programacionRutasRoutes)
+      },
+      {
         path: 'almacenes',
         loadChildren: () => import('./features/almacenes/almacenes.routes').then(m => m.almacenesRoutes)
       },
