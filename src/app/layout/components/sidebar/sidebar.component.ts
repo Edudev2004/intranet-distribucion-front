@@ -28,6 +28,10 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           <span class="nav-icon">🏬</span>
           <span class="nav-label">Inventario</span>
         </a>
+        <a routerLink="/app/categorias" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">🏷️</span>
+          <span class="nav-label">Categorías</span>
+        </a>
         <a routerLink="/app/fleet" routerLinkActive="active" class="nav-item">
           <span class="nav-icon">🚛</span>
           <span class="nav-label">Flota & Choferes</span>
