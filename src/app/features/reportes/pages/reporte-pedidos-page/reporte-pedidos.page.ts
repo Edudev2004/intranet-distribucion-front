@@ -54,6 +54,9 @@ import {
       <a routerLink="/app/reportes/entregas" routerLinkActive="active" class="nav-tab">
         Reporte de Entregas & Cumplimiento
       </a>
+      <a routerLink="/app/reportes/flota" routerLinkActive="active" class="nav-tab">
+        Productividad de Flota
+      </a>
     </nav>
 
     @if (error()) {
