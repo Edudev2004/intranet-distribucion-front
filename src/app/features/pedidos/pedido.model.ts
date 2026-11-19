@@ -17,6 +17,20 @@ export interface DetallePedido {
   subtotal: number;
 }
 
+export interface AprobacionPedidoRequest {
+  decision: 'APROBADO' | 'RECHAZADO';
+  motivo?: string | null;
+}
+
+export interface AprobacionPedidoResponse {
+  idAprobacion: number;
+  idPedido: number;
+  decision: 'APROBADO' | 'RECHAZADO' | string;
+  motivo: string | null;
+  usuarioAprobador: string;
+  fecha: string;
+}
+
 export interface PedidoDetalle {
   idPedido: number;
   idCliente: number;
@@ -30,6 +44,7 @@ export interface PedidoDetalle {
   observacion: string | null;
   total: number;
   detalles: DetallePedido[];
+  aprobacion?: AprobacionPedidoResponse | null;
 }
 
 export interface ClienteOpcion {

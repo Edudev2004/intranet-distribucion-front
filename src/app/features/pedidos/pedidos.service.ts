@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AlmacenOpcion,
+  AprobacionPedidoRequest,
+  AprobacionPedidoResponse,
   ClienteOpcion,
   PedidoDetalle,
   PedidoRequest,
@@ -47,5 +49,13 @@ export class PedidosService {
 
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  aprobarRechazar(idPedido: number, body: AprobacionPedidoRequest): Observable<AprobacionPedidoResponse> {
+    return this.http.post<AprobacionPedidoResponse>(`${this.base}/${idPedido}/aprobacion`, body);
+  }
+
+  obtenerAprobacion(idPedido: number): Observable<AprobacionPedidoResponse> {
+    return this.http.get<AprobacionPedidoResponse>(`${this.base}/${idPedido}/aprobacion`);
   }
 }
