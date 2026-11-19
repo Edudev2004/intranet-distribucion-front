@@ -175,7 +175,7 @@ interface ProgramacionRuta {
                     <td>
                       <div class="client-cell">
                         <span class="client-name">{{ e.cliente ?? 'Cliente asignado' }}</span>
-                        <span class="client-address">📍 {{ e.direccionCliente ?? 'Dirección registrada' }}</span>
+                        <span class="client-address">{{ e.direccionCliente ?? 'Dirección registrada' }}</span>
                       </div>
                     </td>
                     <td>{{ (e.horaEstimada | date:'HH:mm') ?? '--:--' }}</td>
@@ -200,12 +200,12 @@ interface ProgramacionRuta {
                         <div class="pod-thumbnails">
                           @if (e.fotoEntregaUrl) {
                             <div class="thumb-pill" (click)="verFoto(e.fotoEntregaUrl, 'Foto del Paquete Entregado', e)">
-                              <span>📦 Paquete</span>
+                              <span>Paquete</span>
                             </div>
                           }
                           @if (e.fotoGuiaUrl) {
                             <div class="thumb-pill" (click)="verFoto(e.fotoGuiaUrl, 'Guía de Remisión Sellada', e)">
-                              <span>📄 Guía</span>
+                              <span>Guía</span>
                             </div>
                           }
                         </div>
@@ -218,17 +218,17 @@ interface ProgramacionRuta {
                         @if (e.idEstadoEntrega !== 3) {
                           @if (e.idEstadoEntrega !== 2) {
                             <button class="btn-action route" (click)="marcarEnRuta(e)" title="Marcar En Camino">
-                              🚚 En Camino
+                              En Camino
                             </button>
                           }
                           <button class="btn-action deliver" (click)="abrirModalPOD(e)" title="Registrar Prueba de Entrega">
-                            📸 Entregado
+                            Entregado
                           </button>
                         } @else {
                           <span class="badge-done">✓ Conforme</span>
                         }
                         <button class="btn-action alert" (click)="reportarIncidencia(e)" title="Reportar Incidencia">
-                          ⚠️ Incidencia
+                          Incidencia
                         </button>
                       </div>
                     </td>
@@ -253,7 +253,7 @@ interface ProgramacionRuta {
         <div class="modal-content" (click)="$event.stopPropagation()">
           <div class="modal-header">
             <div>
-              <h3>📸 Registrar Prueba de Entrega Fotográfica (POD)</h3>
+              <h3>Registrar Prueba de Entrega Fotográfica (POD)</h3>
               <p>Entrega #{{ entregaSeleccionada()?.idEntrega }} &bull; Pedido #{{ entregaSeleccionada()?.idPedido }}</p>
             </div>
             <button class="btn-close" (click)="cerrarModalPOD()">✕</button>
@@ -261,7 +261,7 @@ interface ProgramacionRuta {
 
           <div class="modal-body">
             <div class="alert info">
-              ℹ️ Al confirmar, el sistema registrará automáticamente la hora exacta de entrega y almacenará las evidencias en el bucket <strong>evidencias-entregas</strong>.
+              Al confirmar, el sistema registrará automáticamente la hora exacta de entrega y almacenará las evidencias en el bucket <strong>evidencias-entregas</strong>.
             </div>
 
             <!-- Evidencia 1: Foto del Paquete Recibido -->
@@ -271,7 +271,7 @@ interface ProgramacionRuta {
               </label>
               <div class="upload-controls">
                 <input type="file" accept="image/*" (change)="onArchivoPaquete($event)" id="filePaquete" class="file-input" />
-                <label for="filePaquete" class="file-btn">📷 Subir fotografía del paquete</label>
+                <label for="filePaquete" class="file-btn">Subir fotografía del paquete</label>
               </div>
               <div class="presets-row">
                 <span class="preset-title">Preset rápido:</span>
@@ -294,7 +294,7 @@ interface ProgramacionRuta {
               </label>
               <div class="upload-controls">
                 <input type="file" accept="image/*" (change)="onArchivoGuia($event)" id="fileGuia" class="file-input" />
-                <label for="fileGuia" class="file-btn">📄 Subir fotografía de la guía firmada</label>
+                <label for="fileGuia" class="file-btn">Subir fotografía de la guía firmada</label>
               </div>
               <div class="presets-row">
                 <span class="preset-title">Preset rápido:</span>

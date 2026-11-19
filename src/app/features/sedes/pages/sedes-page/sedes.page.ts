@@ -308,7 +308,7 @@ import { SupabaseStorageService } from '../../../../core/services/supabase-stora
                   <div class="photo-card current-photo-card">
                     <div class="photo-card-top">
                       <span class="photo-chip chip-current">
-                        {{ editandoId() ? '📌 Imagen Actual' : '🖼️ Portada por Defecto' }}
+                        {{ editandoId() ? 'Imagen Actual' : 'Portada por Defecto' }}
                       </span>
                     </div>
                     <div class="photo-media-box">
@@ -325,21 +325,21 @@ import { SupabaseStorageService } from '../../../../core/services/supabase-stora
                       <!-- Previsualización de la nueva imagen que se subirá -->
                       <div class="new-photo-container">
                         <div class="photo-card-top">
-                          <span class="photo-chip chip-new">✨ Nueva imagen (a subir)</span>
+                          <span class="photo-chip chip-new">Nueva imagen a subir</span>
                           <button type="button" class="btn-discard-photo" (click)="quitarNuevaFoto()" title="Descartar y conservar la imagen actual">✕ Descartar</button>
                         </div>
                         <div class="photo-media-box">
                           <img [src]="nuevaFotoPreview()" alt="Nueva foto que se subirá" class="photo-img-fit" />
                           <div class="photo-badge-ready">
-                            <span>🟢 Lista para guardar</span>
+                            <span>Lista para guardar</span>
                           </div>
                         </div>
                         <div class="new-photo-meta">
-                          <span class="meta-name" [title]="nuevaFotoNombre()">📄 {{ nuevaFotoNombre() }}</span>
+                          <span class="meta-name" [title]="nuevaFotoNombre()">{{ nuevaFotoNombre() }}</span>
                           <span class="meta-size">{{ nuevaFotoTamano() }}</span>
                         </div>
                         <button type="button" class="btn-change-photo" (click)="fileInput.click()">
-                          🔄 Cambiar imagen
+                          Cambiar imagen
                         </button>
                       </div>
                     } @else {
@@ -351,7 +351,7 @@ import { SupabaseStorageService } from '../../../../core/services/supabase-stora
                            (drop)="onDrop($event)"
                            (click)="fileInput.click()">
                         <div class="photo-card-top">
-                          <span class="photo-chip chip-ready">☁️ Subir nueva foto</span>
+                          <span class="photo-chip chip-ready">Subir nueva foto</span>
                         </div>
                         <div class="dropzone-body">
                           <div class="upload-icon-circle">
