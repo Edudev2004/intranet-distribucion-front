@@ -154,9 +154,9 @@ import { RolOpcion, SedeOpcion, Usuario, UsuarioRequest } from '../../usuario.mo
     .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
     .btn-secondary { padding: 0.5rem 1rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9px; color: #334155; font-weight: 600; cursor: pointer; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: start; }
-    .form-grid label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #475569; }
-    .form-grid input, .form-grid select { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; }
-    .form-grid small { color: #b91c1c; }
+    .form-grid label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: #475569; font-weight: 500; }
+    .form-grid input, .form-grid select { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+    .form-grid small { color: #b91c1c; font-size: 0.75rem; }
     .actions { display: flex; gap: 0.5rem; align-self: end; }
     .table-wrap { overflow-x: auto; contain: inline-size; }
     .data-table { width: 100%; border-collapse: collapse; }
@@ -164,13 +164,13 @@ import { RolOpcion, SedeOpcion, Usuario, UsuarioRequest } from '../../usuario.mo
     .data-table th { color: #475569; background: #f8fafc; font-weight: 600; white-space: nowrap; }
     .estado { white-space: nowrap; }
     .row-actions { display: flex; gap: 0.4rem; }
-    .row-actions button { padding: 0.25rem 0.6rem; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; }
+    .row-actions button { padding: 0.25rem 0.6rem; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
     .row-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
     .row-actions .danger { color: #b91c1c; border-color: #fecaca; }
-    .badge { padding: 0.15rem 0.6rem; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 0.8rem; }
+    .badge { padding: 0.15rem 0.6rem; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 0.8rem; font-weight: 500; }
     .badge.off { background: #fee2e2; color: #991b1b; }
     .badge.warn { background: #fef3c7; color: #92400e; margin-left: 0.25rem; }
-    .alert { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
+    .alert { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
     .alert.ok { background: #dcfce7; color: #166534; }
     .alert.err { background: #fee2e2; color: #991b1b; }
   `],
@@ -249,7 +249,6 @@ export class UsuariosPageComponent implements OnInit {
     this.limpiarAvisos();
     this.guardando.set(true);
     const creando = this.editandoId === null;
-    // El backend valida el largo de la contraseña: vacía debe viajar como null
     const body: UsuarioRequest = { ...this.form, password: this.form.password || null };
     const peticion = this.editandoId === null
       ? this.service.crear(body)
