@@ -168,6 +168,9 @@ import { Component, Input } from '@angular/core';
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         }
+        @case ('zap') {
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        }
         @default {
           <circle cx="12" cy="12" r="10" />
         }
