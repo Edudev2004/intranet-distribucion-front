@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
@@ -16,7 +17,7 @@ import {
 @Component({
   selector: 'app-reporte-inventario-page',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe, PageHeaderComponent],
+  imports: [FormsModule, RouterModule, DatePipe, DecimalPipe, PageHeaderComponent],
   template: `
     <app-page-header title="Reporte de Inventario" subtitle="Stock actual por producto, categoría y almacén">
       <button class="btn-secondary" [disabled]="descargando() !== null" (click)="descargar('excel')">
@@ -26,6 +27,19 @@ import {
         {{ descargando() === 'pdf' ? 'Generando...' : 'Descargar PDF' }}
       </button>
     </app-page-header>
+
+    <!-- Navegación entre módulos de reportes -->
+    <nav class="reportes-nav">
+      <a routerLink="/app/reportes/inventario" routerLinkActive="active" class="nav-tab">
+        Reporte de Inventario
+      </a>
+      <a routerLink="/app/reportes/pedidos" routerLinkActive="active" class="nav-tab">
+        Reporte de Pedidos
+      </a>
+      <a routerLink="/app/reportes/entregas" routerLinkActive="active" class="nav-tab">
+        Reporte de Entregas & Cumplimiento
+      </a>
+    </nav>
 
     @if (error()) {
       <div class="alert err">{{ error() }}</div>
@@ -100,6 +114,33 @@ import {
     </div>
   `,
   styles: [`
+    .reportes-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.25rem;
+    }
+    .nav-tab {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #64748b;
+      text-decoration: none;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -4px;
+    }
+    .nav-tab:hover {
+      color: #0f172a;
+      background: #f8fafc;
+    }
+    .nav-tab.active {
+      color: #052e16;
+      border-bottom-color: var(--primary-color, #18d600);
+      background: #f0fdf4;
+    }
     .content-card { background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 1rem; }
     .btn-primary { padding: 0.5rem 1rem; background: var(--primary-color, #18d600); color: #052e16; border: none; border-radius: 9px; box-shadow: 0 4px 12px var(--primary-glow); font-weight: 600; cursor: pointer; }
     .btn-secondary { padding: 0.5rem 1rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9px; color: #334155; font-weight: 600; cursor: pointer; }
