@@ -9,20 +9,25 @@ import {
   FormatoReporte,
   ReporteInventario,
 } from './reporte-inventario.model';
+import {
+  FiltrosReportePedido,
+  ReportePedido,
+} from './reporte-pedido.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
   private http = inject(HttpClient);
-  private base = `${environment.apiUrl}/reportes/inventario`;
+  private baseInventario = `${environment.apiUrl}/reportes/inventario`;
+  private basePedidos = `${environment.apiUrl}/reportes/pedidos`;
 
+  // === REPORTE DE INVENTARIO (RF-22) ===
   inventario(filtros: FiltrosReporte): Observable<ReporteInventario> {
-    return this.http.get<ReporteInventario>(this.base, { params: this.params(filtros) });
+    return this.http.get<ReporteInventario>(this.baseInventario, { params: this.paramsInventario(filtros) });
   }
 
-  // Se descarga con HttpClient para que el interceptor agregue el token
   descargarInventario(formato: FormatoReporte, filtros: FiltrosReporte): Observable<Blob> {
-    return this.http.get(`${this.base}/${formato}`, {
-      params: this.params(filtros),
+    return this.http.get(`${this.baseInventario}/${formato}`, {
+      params: this.paramsInventario(filtros),
       responseType: 'blob',
     });
   }
@@ -35,13 +40,42 @@ export class ReportesService {
     return this.http.get<CategoriaOpcion[]>(`${environment.apiUrl}/categorias`);
   }
 
-  private params(filtros: FiltrosReporte): HttpParams {
+  // === REPORTE DE PEDIDOS (RF-23) ===
+  pedidos(filtros: FiltrosReportePedido): Observable<ReportePedido> {
+    return this.http.get<ReportePedido>(this.basePedidos, { params: this.paramsPedidos(filtros) });
+  }
+
+  descargarPedidos(formato: 'pdf' | 'excel', filtros: FiltrosReportePedido): Observable<Blob> {
+    return this.http.get(`${this.basePedidos}/${formato}`, {
+      params: this.paramsPedidos(filtros),
+      responseType: 'blob',
+    });
+  }
+
+  private paramsInventario(filtros: FiltrosReporte): HttpParams {
     let params = new HttpParams();
     if (filtros.idAlmacen) {
       params = params.set('idAlmacen', filtros.idAlmacen);
     }
     if (filtros.idCategoria) {
       params = params.set('idCategoria', filtros.idCategoria);
+    }
+    return params;
+  }
+
+  private paramsPedidos(filtros: FiltrosReportePedido): HttpParams {
+    let params = new HttpParams();
+    if (filtros.fechaInicio) {
+      params = params.set('fechaInicio', filtros.fechaInicio);
+    }
+    if (filtros.fechaFin) {
+      params = params.set('fechaFin', filtros.fechaFin);
+    }
+    if (filtros.idEstado !== undefined && filtros.idEstado !== null) {
+      params = params.set('idEstado', filtros.idEstado.toString());
+    }
+    if (filtros.idCliente !== undefined && filtros.idCliente !== null) {
+      params = params.set('idCliente', filtros.idCliente.toString());
     }
     return params;
   }
