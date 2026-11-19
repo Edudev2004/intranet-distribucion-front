@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface EvidenciaPreset {
   id: string;
@@ -13,8 +13,7 @@ export interface EvidenciaPreset {
   providedIn: 'root'
 })
 export class SupabaseStorageService {
-  readonly bucketName = 'evidencias-entregas';
-  readonly supabaseProjectUrl = 'https://aejheugcxtmeuuyfkpjo.supabase.co';
+  readonly config = environment.supabase;
 
   readonly presets: EvidenciaPreset[] = [
     {
@@ -48,7 +47,42 @@ export class SupabaseStorageService {
   ];
 
   /**
-   * Convierte un archivo local a DataURL para vista previa y almacenamiento inmediato
+   * Sube un archivo al bucket correspondiente de Supabase Storage.
+   * Si la anonKey aún no se ha colocado en environment.ts, procesa el archivo a DataURL
+   * para vista previa instantánea y funcionamiento continuo del sistema.
+   */
+  async subirArchivo(file: File, bucket = 'sedes'): Promise<string> {
+    if (this.config.anonKey && this.config.anonKey.trim() !== '') {
+      try {
+        const fileExt = file.name.split('.').pop() || 'jpg';
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+        const uploadUrl = `${this.config.url}/storage/v1/object/${bucket}/${fileName}`;
+
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.config.anonKey}`,
+            'apikey': this.config.anonKey,
+            'Content-Type': file.type || 'image/jpeg'
+          },
+          body: file
+        });
+
+        if (response.ok) {
+          return `${this.config.url}/storage/v1/object/public/${bucket}/${fileName}`;
+        }
+        console.warn('Fallo en Supabase Storage REST API, usando fallback de DataURL:', await response.text());
+      } catch (err) {
+        console.warn('Error al conectar con Supabase Storage, usando fallback local:', err);
+      }
+    }
+
+    // Fallback: procesa a DataURL para previsualización y persistencia inmediata
+    return this.procesarArchivo(file);
+  }
+
+  /**
+   * Convierte un archivo local a DataURL para vista previa inmediata
    */
   procesarArchivo(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -59,11 +93,8 @@ export class SupabaseStorageService {
     });
   }
 
-  /**
-   * Genera la URL pública estimada para un archivo subido a Supabase Storage
-   */
-  obtenerUrlPublica(nombreArchivo: string): string {
-    return `${this.supabaseProjectUrl}/storage/v1/object/public/${this.bucketName}/${nombreArchivo}`;
+  obtenerUrlPublica(nombreArchivo: string, bucket = 'sedes'): string {
+    return `${this.config.url}/storage/v1/object/public/${bucket}/${nombreArchivo}`;
   }
 
   obtenerPresetsPorTipo(tipo: 'entrega' | 'incidencia'): EvidenciaPreset[] {
