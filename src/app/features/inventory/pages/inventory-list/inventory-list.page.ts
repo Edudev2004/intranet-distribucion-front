@@ -44,7 +44,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
   styles: [`
     .btn-primary {
       padding: 0.5rem 1rem;
-      background-color: #2563eb;
+      background-color: var(--primary-color, #18d600);
       color: white;
       border: none;
       border-radius: 6px;

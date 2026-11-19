@@ -123,10 +123,6 @@ import {
         </label>
       </div>
 
-      @if (cargando()) {
-        <p>Cargando...</p>
-      }
-
       <table class="data-table">
         <thead>
           <tr>
@@ -135,23 +131,32 @@ import {
           </tr>
         </thead>
         <tbody>
-          @for (p of pedidos(); track p.idPedido) {
+          @if (cargando()) {
             <tr>
-              <td><strong>{{ p.idPedido }}</strong></td>
-              <td>{{ p.fechaPedido }}</td>
-              <td>{{ p.cliente }}</td>
-              <td>{{ p.almacen }}</td>
-              <td>S/ {{ p.total | number:'1.2-2' }}</td>
-              <td><span class="badge" [class.warn]="p.idEstadoPedido === 1" [class.off]="p.idEstadoPedido === 3">{{ p.estado }}</span></td>
-              <td class="row-actions">
-                <button (click)="verDetalle(p)">Ver detalle</button>
-                @if (p.idEstadoPedido === 1) {
-                  <button class="danger" (click)="eliminar(p)">Eliminar</button>
-                }
+              <td colspan="7">
+                <div class="loading-state">
+                  <div class="spinner"></div>
+                  <span>Cargando información...</span>
+                </div>
               </td>
             </tr>
-          } @empty {
-            @if (!cargando()) {
+          } @else {
+            @for (p of pedidos(); track p.idPedido) {
+              <tr>
+                <td><strong>{{ p.idPedido }}</strong></td>
+                <td>{{ p.fechaPedido }}</td>
+                <td>{{ p.cliente }}</td>
+                <td>{{ p.almacen }}</td>
+                <td>S/ {{ p.total | number:'1.2-2' }}</td>
+                <td><span class="badge" [class.warn]="p.idEstadoPedido === 1" [class.off]="p.idEstadoPedido === 3">{{ p.estado }}</span></td>
+                <td class="row-actions">
+                  <button (click)="verDetalle(p)">Ver detalle</button>
+                  @if (p.idEstadoPedido === 1) {
+                    <button class="danger" (click)="eliminar(p)">Eliminar</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
               <tr><td colspan="7">No hay pedidos registrados.</td></tr>
             }
           }
