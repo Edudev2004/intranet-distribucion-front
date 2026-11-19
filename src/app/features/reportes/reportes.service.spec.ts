@@ -3,6 +3,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { ReportesService } from './reportes.service';
 import { environment } from '../../../environments/environment';
 import { ReportePedido } from './reporte-pedido.model';
+import { ReporteEntrega } from './reporte-entrega.model';
 
 describe('ReportesService', () => {
   let service: ReportesService;
@@ -104,5 +105,70 @@ describe('ReportesService', () => {
     expect(req.request.method).toBe('GET');
     expect(req.request.responseType).toBe('blob');
     req.flush(mockBlob);
+  });
+
+  it('debe obtener reporte de entregas y cumplimiento con métricas calculadas', () => {
+    const mockReporte: ReporteEntrega = {
+      generadoEn: '2026-11-19T21:00:00Z',
+      totalEntregas: 10,
+      totalATiempo: 8,
+      totalConRetraso: 1,
+      totalPendientes: 1,
+      porcentajeCumplimiento: 80.0,
+      items: [
+        {
+          idEntrega: 1,
+          idPedido: 101,
+          cliente: 'Cadena Farma Norte',
+          direccion: 'Av. Los Próceres 123',
+          estadoEntrega: 'ENTREGADO',
+          horaEstimada: '10:00',
+          horaEntregaReal: '09:45',
+          cumplimiento: 'A TIEMPO',
+          notas: 'Recibido conforme por almacenero',
+        },
+      ],
+    };
+
+    service
+      .entregas({ fechaInicio: '2026-11-01', fechaFin: '2026-11-19', idEstado: 3 })
+      .subscribe(res => {
+        expect(res.totalEntregas).toBe(10);
+        expect(res.totalATiempo).toBe(8);
+        expect(res.porcentajeCumplimiento).toBe(80.0);
+        expect(res.items.length).toBe(1);
+        expect(res.items[0].cumplimiento).toBe('A TIEMPO');
+      });
+
+    const req = httpMock.expectOne(
+      r =>
+        r.url === `${environment.apiUrl}/reportes/entregas` &&
+        r.params.get('fechaInicio') === '2026-11-01' &&
+        r.params.get('fechaFin') === '2026-11-19' &&
+        r.params.get('idEstado') === '3'
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush(mockReporte);
+  });
+
+  it('debe solicitar descarga de reporte de entregas en PDF y Excel como Blob', () => {
+    const mockBlobPdf = new Blob(['%PDF-1.4 mock entregas'], { type: 'application/pdf' });
+    const mockBlobExcel = new Blob(['mock excel entregas'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    service.descargarEntregas('pdf', {}).subscribe(blob => {
+      expect(blob).toBeTruthy();
+    });
+    const reqPdf = httpMock.expectOne(`${environment.apiUrl}/reportes/entregas/pdf`);
+    expect(reqPdf.request.method).toBe('GET');
+    reqPdf.flush(mockBlobPdf);
+
+    service.descargarEntregas('excel', {}).subscribe(blob => {
+      expect(blob).toBeTruthy();
+    });
+    const reqExcel = httpMock.expectOne(`${environment.apiUrl}/reportes/entregas/excel`);
+    expect(reqExcel.request.method).toBe('GET');
+    reqExcel.flush(mockBlobExcel);
   });
 });

@@ -13,12 +13,17 @@ import {
   FiltrosReportePedido,
   ReportePedido,
 } from './reporte-pedido.model';
+import {
+  FiltrosReporteEntrega,
+  ReporteEntrega,
+} from './reporte-entrega.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
   private http = inject(HttpClient);
   private baseInventario = `${environment.apiUrl}/reportes/inventario`;
   private basePedidos = `${environment.apiUrl}/reportes/pedidos`;
+  private baseEntregas = `${environment.apiUrl}/reportes/entregas`;
 
   // === REPORTE DE INVENTARIO (RF-22) ===
   inventario(filtros: FiltrosReporte): Observable<ReporteInventario> {
@@ -52,6 +57,18 @@ export class ReportesService {
     });
   }
 
+  // === REPORTE DE ENTREGAS & CUMPLIMIENTO (RF-24) ===
+  entregas(filtros: FiltrosReporteEntrega): Observable<ReporteEntrega> {
+    return this.http.get<ReporteEntrega>(this.baseEntregas, { params: this.paramsEntregas(filtros) });
+  }
+
+  descargarEntregas(formato: 'pdf' | 'excel', filtros: FiltrosReporteEntrega): Observable<Blob> {
+    return this.http.get(`${this.baseEntregas}/${formato}`, {
+      params: this.paramsEntregas(filtros),
+      responseType: 'blob',
+    });
+  }
+
   private paramsInventario(filtros: FiltrosReporte): HttpParams {
     let params = new HttpParams();
     if (filtros.idAlmacen) {
@@ -76,6 +93,20 @@ export class ReportesService {
     }
     if (filtros.idCliente !== undefined && filtros.idCliente !== null) {
       params = params.set('idCliente', filtros.idCliente.toString());
+    }
+    return params;
+  }
+
+  private paramsEntregas(filtros: FiltrosReporteEntrega): HttpParams {
+    let params = new HttpParams();
+    if (filtros.fechaInicio) {
+      params = params.set('fechaInicio', filtros.fechaInicio);
+    }
+    if (filtros.fechaFin) {
+      params = params.set('fechaFin', filtros.fechaFin);
+    }
+    if (filtros.idEstado !== undefined && filtros.idEstado !== null) {
+      params = params.set('idEstado', filtros.idEstado.toString());
     }
     return params;
   }
