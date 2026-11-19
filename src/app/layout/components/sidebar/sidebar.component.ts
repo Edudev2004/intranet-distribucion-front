@@ -449,6 +449,7 @@ export class SidebarComponent {
       title: 'Distribución & Logística',
       collapsed: false,
       items: [
+        { label: 'Zonas de Reparto', route: '/app/zonas', icon: 'map-pin' },
         { label: 'Programación de Rutas', route: '/app/programacion-rutas', icon: 'truck' },
         { label: 'Despachos & Rutas', route: '/app/distribution', icon: 'truck' },
         { label: 'Incidencias', route: '/app/incidencias', icon: 'alert' },
