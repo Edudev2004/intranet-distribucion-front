@@ -7,6 +7,7 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 import { EntregasService } from '../../services/entregas.service';
 import { ActualizarEntregaRequest, Entrega, EstadoEntregaId } from '../../models/entrega.model';
 import { SupabaseStorageService, EvidenciaPreset } from '../../../../core/services/supabase-storage.service';
+import { environment } from '../../../../../environments/environment';
 
 interface ProgramacionRuta {
   idProgramacion: number;
@@ -503,7 +504,7 @@ export class DistributionListPage implements OnInit {
   cargarAsignaciones() {
     this.cargando = true;
     this.error.set('');
-    this.http.get<ProgramacionRuta[]>('http://localhost:8080/api/v1/programacion-rutas').subscribe({
+    this.http.get<ProgramacionRuta[]>(`${environment.apiUrl}/programacion-rutas`).subscribe({
       next: (data) => {
         this.asignaciones = data ?? [];
         this.cargando = false;

@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class ProgramacionRutasService {
-  private apiUrl = `${environment.apiUrl || 'http://localhost:8080'}/programacion-rutas`;
+  private apiUrl = `${environment.apiUrl}/programacion-rutas`;
 
   constructor(private http: HttpClient) {}
 
