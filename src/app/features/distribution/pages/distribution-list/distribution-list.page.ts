@@ -271,8 +271,7 @@ interface ProgramacionRuta {
               </label>
               <div class="upload-controls">
                 <input type="file" accept="image/*" (change)="onArchivoPaquete($event)" id="filePaquete" class="file-input" />
-                <label for="filePaquete" class="file-btn">📁 Subir foto del paquete</label>
-                <input type="url" [(ngModel)]="podForm.fotoEntregaUrl" placeholder="o pegar URL de Supabase Storage..." class="url-field" />
+                <label for="filePaquete" class="file-btn">📷 Subir fotografía del paquete</label>
               </div>
               <div class="presets-row">
                 <span class="preset-title">Preset rápido:</span>
@@ -295,8 +294,7 @@ interface ProgramacionRuta {
               </label>
               <div class="upload-controls">
                 <input type="file" accept="image/*" (change)="onArchivoGuia($event)" id="fileGuia" class="file-input" />
-                <label for="fileGuia" class="file-btn">📁 Subir foto de guía firmada</label>
-                <input type="url" [(ngModel)]="podForm.fotoGuiaUrl" placeholder="o pegar URL de Supabase Storage..." class="url-field" />
+                <label for="fileGuia" class="file-btn">📄 Subir fotografía de la guía firmada</label>
               </div>
               <div class="presets-row">
                 <span class="preset-title">Preset rápido:</span>
@@ -585,8 +583,8 @@ export class DistributionListPage implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       try {
-        const dataUrl = await this.storageService.procesarArchivo(input.files[0]);
-        this.podForm.fotoEntregaUrl = dataUrl;
+        const url = await this.storageService.subirArchivo(input.files[0], 'evidencias');
+        this.podForm.fotoEntregaUrl = url;
       } catch {
         this.error.set('Error al procesar la foto del paquete');
       }
@@ -597,8 +595,8 @@ export class DistributionListPage implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       try {
-        const dataUrl = await this.storageService.procesarArchivo(input.files[0]);
-        this.podForm.fotoGuiaUrl = dataUrl;
+        const url = await this.storageService.subirArchivo(input.files[0], 'evidencias');
+        this.podForm.fotoGuiaUrl = url;
       } catch {
         this.error.set('Error al procesar la foto de la guía');
       }

@@ -65,16 +65,8 @@ import {
               <div class="upload-box">
                 <input type="file" accept="image/*" (change)="onArchivoSeleccionado($event)" id="fileIncidencia" class="file-input" />
                 <label for="fileIncidencia" class="file-label">
-                  📁 Subir foto desde el dispositivo
+                  📁 Subir foto de evidencia desde el dispositivo
                 </label>
-                <div class="or-separator">o ingresar URL directa / Supabase Storage</div>
-                <input
-                  name="evidenciaUrl"
-                  type="url"
-                  [(ngModel)]="form.evidenciaUrl"
-                  placeholder="https://...supabase.co/storage/v1/object/public/evidencias-entregas/foto.jpg"
-                  class="url-input"
-                />
                 <div class="presets-row">
                   <span class="preset-label">Presets de prueba:</span>
                   @for (p of presetsIncidencia; track p.id) {
@@ -374,8 +366,8 @@ export class IncidenciasPageComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       try {
-        const dataUrl = await this.storageService.procesarArchivo(input.files[0]);
-        this.form.evidenciaUrl = dataUrl;
+        const url = await this.storageService.subirArchivo(input.files[0], 'evidencias');
+        this.form.evidenciaUrl = url;
       } catch (err) {
         this.error.set('Error al procesar el archivo seleccionado');
       }

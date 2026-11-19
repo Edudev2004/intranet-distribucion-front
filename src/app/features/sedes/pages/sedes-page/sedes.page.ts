@@ -6,6 +6,7 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { SedesService } from '../../sedes.service';
 import { ResponsableSede, Sede, SedeRequest } from '../../sede.model';
+import { SupabaseStorageService } from '../../../../core/services/supabase-storage.service';
 
 @Component({
   selector: 'app-sedes-page',
@@ -295,30 +296,39 @@ import { ResponsableSede, Sede, SedeRequest } from '../../sede.model';
 
           <form #f="ngForm" (ngSubmit)="guardarSede()">
             <div class="modal-body">
-              <!-- Previsualización de Imagen / Supabase Storage -->
-              <div class="image-preview-section">
-                <div class="preview-box">
-                  <img
-                    [src]="formFotoUrl || fotoPlaceholder"
-                    alt="Previsualización"
-                    class="preview-img"
-                    (error)="formFotoUrl = fotoPlaceholder"
-                  />
-                  <div class="preview-badge">Vista previa (Supabase / Storage)</div>
-                </div>
-                <div class="preview-input">
-                  <label>
-                    URL de la Fotografía (Supabase Storage o Web)
-                    <input
-                      type="url"
-                      name="fotoUrl"
-                      placeholder="https://xyz.supabase.co/storage/v1/object/public/sedes/sede-01.jpg"
-                      [(ngModel)]="formFotoUrl"
-                    />
-                  </label>
-                  <small class="help-text">
-                    💡 Si aún no tienes la URL de Supabase, puedes dejarlo vacío y el sistema asignará una portada logística moderna por defecto.
-                  </small>
+              <!-- Zona Drag & Drop / Upload para Fotografía de Sede -->
+              <div class="dropzone-section">
+                <label class="dropzone-label">Fotografía de la Sede</label>
+                <div class="dropzone-card"
+                     [class.dragover]="isDragging()"
+                     (dragover)="onDragOver($event)"
+                     (dragleave)="onDragLeave($event)"
+                     (drop)="onDrop($event)"
+                     (click)="fileInput.click()">
+                  <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+
+                  @if (formFotoUrl) {
+                    <div class="dropzone-preview">
+                      <img [src]="formFotoUrl" alt="Previsualización de Sede" class="dropzone-img" />
+                      <div class="dropzone-overlay">
+                        <span class="change-hint">📸 Haz clic o arrastra para cambiar imagen</span>
+                        <button type="button" class="btn-remove-drop" (click)="$event.stopPropagation(); quitarFoto()">✕ Quitar</button>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="dropzone-placeholder">
+                      <div class="upload-icon">
+                        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="17 8 12 3 7 8"></polyline>
+                          <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                      </div>
+                      <p class="drop-title">Arrastra y suelta la imagen aquí</p>
+                      <p class="drop-sub">o <span class="browse-link">haz clic para examinar archivos</span></p>
+                      <span class="file-hint">Formatos soportados: JPG, PNG, WEBP (hasta 5MB)</span>
+                    </div>
+                  }
                 </div>
               </div>
 
@@ -891,71 +901,130 @@ import { ResponsableSede, Sede, SedeRequest } from '../../sede.model';
       overflow-y: auto;
     }
 
-    /* Preview Foto */
-    .image-preview-section {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      background: #f8fafc;
-      padding: 1rem;
+    /* Zona Drag & Drop Fotografía */
+    .dropzone-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .dropzone-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .dropzone-card {
+      border: 2px dashed #cbd5e1;
       border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      align-items: center;
-    }
-
-    .preview-box {
+      background: #f8fafc;
+      padding: 1.25rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
       position: relative;
-      width: 130px;
-      height: 90px;
-      border-radius: 10px;
       overflow: hidden;
-      flex-shrink: 0;
-      background: #0b1120;
     }
 
-    .preview-img {
+    .dropzone-card:hover, .dropzone-card.dragover {
+      border-color: var(--primary-color, #18d600);
+      background: #f0fdf4;
+      box-shadow: 0 0 0 3px rgba(24, 214, 0, 0.12);
+    }
+
+    .dropzone-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .upload-icon {
+      color: #64748b;
+      margin-bottom: 6px;
+      transition: transform 0.2s ease;
+    }
+
+    .dropzone-card:hover .upload-icon {
+      transform: translateY(-2px);
+      color: var(--primary-color, #18d600);
+    }
+
+    .drop-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .drop-sub {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .browse-link {
+      color: #0284c7;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .drop-hint {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .dropzone-preview {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .dropzone-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .preview-badge {
+    .dropzone-overlay {
       position: absolute;
-      bottom: 0;
-      inset-inline: 0;
-      background: rgba(0, 0, 0, 0.65);
-      color: #ffffff;
-      font-size: 9px;
-      text-align: center;
-      padding: 2px 4px;
-    }
-
-    .preview-input {
-      flex: 1;
-    }
-
-    .preview-input label {
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #475569;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 10px 12px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
-    .preview-input input {
-      padding: 0.5rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 13px;
+    .dropzone-preview:hover .dropzone-overlay {
+      opacity: 1;
     }
 
-    .help-text {
+    .change-hint {
+      color: #ffffff;
       font-size: 11px;
-      color: #64748b;
-      margin-top: 4px;
-      line-height: 1.4;
-      display: block;
+      font-weight: 500;
+    }
+
+    .btn-remove-drop {
+      background: #ef4444;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-remove-drop:hover {
+      background: #dc2626;
     }
 
     .form-grid {
@@ -1018,6 +1087,7 @@ import { ResponsableSede, Sede, SedeRequest } from '../../sede.model';
 })
 export class SedesPageComponent implements OnInit {
   private service = inject(SedesService);
+  private storageService = inject(SupabaseStorageService);
 
   sedes = signal<Sede[]>([]);
   responsables = signal<ResponsableSede[]>([]);
@@ -1032,6 +1102,7 @@ export class SedesPageComponent implements OnInit {
 
   mostrarModal = signal(false);
   editandoId = signal<number | null>(null);
+  isDragging = signal(false);
 
   fotoPlaceholder = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80';
   formFotoUrl = '';
@@ -1152,6 +1223,48 @@ export class SedesPageComponent implements OnInit {
   cerrarModal(): void {
     this.mostrarModal.set(false);
     this.editandoId.set(null);
+    this.isDragging.set(false);
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  async onDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+    if (event.dataTransfer?.files && event.dataTransfer.files[0]) {
+      await this.procesarArchivo(event.dataTransfer.files[0]);
+    }
+  }
+
+  async onFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      await this.procesarArchivo(input.files[0]);
+    }
+  }
+
+  async procesarArchivo(file: File): Promise<void> {
+    try {
+      const url = await this.storageService.subirArchivo(file, 'sedes');
+      this.formFotoUrl = url;
+    } catch (err) {
+      console.error('Error al procesar la foto de la sede:', err);
+    }
+  }
+
+  quitarFoto(): void {
+    this.formFotoUrl = '';
   }
 
   guardarSede(): void {
