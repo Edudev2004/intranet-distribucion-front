@@ -199,13 +199,15 @@ interface ProgramacionRuta {
                       @if (e.fotoEntregaUrl || e.fotoGuiaUrl) {
                         <div class="pod-thumbnails">
                           @if (e.fotoEntregaUrl) {
-                            <div class="thumb-pill" (click)="verFoto(e.fotoEntregaUrl, 'Foto del Paquete Entregado', e)">
-                              <span>Paquete</span>
+                            <div class="thumb-preview-box" (click)="verFoto(e.fotoEntregaUrl, 'Foto del Paquete Entregado', e)" title="Ver fotografía del paquete">
+                              <img [src]="e.fotoEntregaUrl" alt="Foto paquete" class="mini-thumb-img" (error)="onThumbError($event)" />
+                              <span class="mini-thumb-label">Paquete</span>
                             </div>
                           }
                           @if (e.fotoGuiaUrl) {
-                            <div class="thumb-pill" (click)="verFoto(e.fotoGuiaUrl, 'Guía de Remisión Sellada', e)">
-                              <span>Guía</span>
+                            <div class="thumb-preview-box" (click)="verFoto(e.fotoGuiaUrl, 'Guía de Remisión Sellada', e)" title="Ver fotografía de la guía">
+                              <img [src]="e.fotoGuiaUrl" alt="Foto guía" class="mini-thumb-img" (error)="onThumbError($event)" />
+                              <span class="mini-thumb-label">Guía</span>
                             </div>
                           }
                         </div>
@@ -402,9 +404,11 @@ interface ProgramacionRuta {
     .real-time { color: #166534; font-weight: 600; }
     .text-muted { color: #94a3b8; font-size: 0.8rem; }
     
-    .pod-thumbnails { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .thumb-pill { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 6px; cursor: pointer; }
-    .thumb-pill:hover { background: #d1fae5; }
+    .pod-thumbnails { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .thumb-preview-box { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 3px; border-radius: 6px; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); transition: all 0.2s ease; }
+    .thumb-preview-box:hover { transform: translateY(-2px); border-color: var(--primary-color, #18d600); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12); }
+    .mini-thumb-img { width: 44px; height: 32px; border-radius: 4px; object-fit: cover; display: block; background: #0f172a; }
+    .mini-thumb-label { font-size: 10px; font-weight: 600; color: #334155; line-height: 1; }
     .no-pod { font-size: 0.8rem; color: #94a3b8; }
 
     /* Action buttons */
@@ -651,6 +655,11 @@ export class DistributionListPage implements OnInit {
     this.modalFotoVisible.set(false);
     this.fotoUrl.set('');
     this.fotoEntregaContexto.set(null);
+  }
+
+  onThumbError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=100&q=80';
   }
 
   private limpiarAvisos() {

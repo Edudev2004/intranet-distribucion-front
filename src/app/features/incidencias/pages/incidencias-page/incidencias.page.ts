@@ -245,9 +245,9 @@ import {
     .btn-remove-photo { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7rem; border: none; padding: 0.25rem; cursor: pointer; }
 
     /* Thumbnail table preview */
-    .thumbnail-wrapper { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; background: #f1f5f9; padding: 2px 6px; border-radius: 6px; border: 1px solid #e2e8f0; }
-    .thumbnail-wrapper:hover { background: #e2e8f0; }
-    .thumb-img { width: 34px; height: 34px; object-fit: cover; border-radius: 4px; }
+    .thumbnail-wrapper { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; background: #ffffff; padding: 3px 8px 3px 4px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); transition: all 0.2s ease; }
+    .thumbnail-wrapper:hover { transform: translateY(-2px); border-color: var(--primary-color, #18d600); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12); }
+    .thumb-img { width: 44px; height: 32px; object-fit: cover; border-radius: 4px; display: block; }
     .thumb-hint { font-size: 0.75rem; color: #0284c7; font-weight: 600; }
     .no-photo { color: #94a3b8; font-size: 0.8rem; }
 
