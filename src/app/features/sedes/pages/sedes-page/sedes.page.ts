@@ -296,39 +296,79 @@ import { SupabaseStorageService } from '../../../../core/services/supabase-stora
 
           <form #f="ngForm" (ngSubmit)="guardarSede()">
             <div class="modal-body">
-              <!-- Zona Drag & Drop / Upload para Fotografía de Sede -->
-              <div class="dropzone-section">
-                <label class="dropzone-label">Fotografía de la Sede</label>
-                <div class="dropzone-card"
-                     [class.dragover]="isDragging()"
-                     (dragover)="onDragOver($event)"
-                     (dragleave)="onDragLeave($event)"
-                     (drop)="onDrop($event)"
-                     (click)="fileInput.click()">
-                  <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+              <!-- Gestión y Previsualización de Fotografías: Imagen que Hay vs Imagen que se Subirá -->
+              <div class="photo-dual-section">
+                <div class="photo-section-header">
+                  <span class="photo-section-title">Fotografía de la Sede</span>
+                  <span class="photo-section-hint">Previsualización comparativa: imagen actual vs imagen a subir</span>
+                </div>
 
-                  @if (formFotoUrl) {
-                    <div class="dropzone-preview">
-                      <img [src]="formFotoUrl" alt="Previsualización de Sede" class="dropzone-img" />
-                      <div class="dropzone-overlay">
-                        <span class="change-hint">📸 Haz clic o arrastra para cambiar imagen</span>
-                        <button type="button" class="btn-remove-drop" (click)="$event.stopPropagation(); quitarFoto()">✕ Quitar</button>
+                <div class="photo-dual-grid">
+                  <!-- TARJETA 1: PREVISUALIZACIÓN DE LA IMAGEN QUE HAY (Actual o Por defecto) -->
+                  <div class="photo-card current-photo-card">
+                    <div class="photo-card-top">
+                      <span class="photo-chip chip-current">
+                        {{ editandoId() ? '📌 Imagen Actual' : '🖼️ Portada por Defecto' }}
+                      </span>
+                    </div>
+                    <div class="photo-media-box">
+                      <img [src]="fotoActualModal()" alt="Imagen actual de la sede" class="photo-img-fit" />
+                      <div class="photo-media-caption">
+                        <span>{{ editandoId() ? 'Registrada en sistema' : 'Se asignará si no subes otra' }}</span>
                       </div>
                     </div>
-                  } @else {
-                    <div class="dropzone-placeholder">
-                      <div class="upload-icon">
-                        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="17 8 12 3 7 8"></polyline>
-                          <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
+                  </div>
+
+                  <!-- TARJETA 2: PREVISUALIZACIÓN DE LA IMAGEN QUE SE SUBIRÁ O ZONA DROPZONE -->
+                  <div class="photo-card upload-photo-card">
+                    @if (nuevaFotoPreview()) {
+                      <!-- Previsualización de la nueva imagen que se subirá -->
+                      <div class="new-photo-container">
+                        <div class="photo-card-top">
+                          <span class="photo-chip chip-new">✨ Nueva imagen (a subir)</span>
+                          <button type="button" class="btn-discard-photo" (click)="quitarNuevaFoto()" title="Descartar y conservar la imagen actual">✕ Descartar</button>
+                        </div>
+                        <div class="photo-media-box">
+                          <img [src]="nuevaFotoPreview()" alt="Nueva foto que se subirá" class="photo-img-fit" />
+                          <div class="photo-badge-ready">
+                            <span>🟢 Lista para guardar</span>
+                          </div>
+                        </div>
+                        <div class="new-photo-meta">
+                          <span class="meta-name" [title]="nuevaFotoNombre()">📄 {{ nuevaFotoNombre() }}</span>
+                          <span class="meta-size">{{ nuevaFotoTamano() }}</span>
+                        </div>
+                        <button type="button" class="btn-change-photo" (click)="fileInput.click()">
+                          🔄 Cambiar imagen
+                        </button>
                       </div>
-                      <p class="drop-title">Arrastra y suelta la imagen aquí</p>
-                      <p class="drop-sub">o <span class="browse-link">haz clic para examinar archivos</span></p>
-                      <span class="file-hint">Formatos soportados: JPG, PNG, WEBP (hasta 5MB)</span>
-                    </div>
-                  }
+                    } @else {
+                      <!-- Zona Dropzone para arrastrar o subir la nueva foto -->
+                      <div class="dropzone-box"
+                           [class.dragover]="isDragging()"
+                           (dragover)="onDragOver($event)"
+                           (dragleave)="onDragLeave($event)"
+                           (drop)="onDrop($event)"
+                           (click)="fileInput.click()">
+                        <div class="photo-card-top">
+                          <span class="photo-chip chip-ready">☁️ Subir nueva foto</span>
+                        </div>
+                        <div class="dropzone-body">
+                          <div class="upload-icon-circle">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                              <polyline points="17 8 12 3 7 8"></polyline>
+                              <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                          </div>
+                          <strong class="drop-action-text">Arrastra la imagen aquí</strong>
+                          <p class="drop-sub-text">o <span class="browse-action">haz clic para examinar</span></p>
+                          <span class="drop-specs-text">JPG, PNG o WEBP (máx. 5MB)</span>
+                        </div>
+                      </div>
+                    }
+                    <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" (change)="onFileSelected($event)" hidden />
+                  </div>
                 </div>
               </div>
 
@@ -901,130 +941,260 @@ import { SupabaseStorageService } from '../../../../core/services/supabase-stora
       overflow-y: auto;
     }
 
-    /* Zona Drag & Drop Fotografía */
-    .dropzone-section {
+    /* Sección dual de previsualización de fotografías */
+    .photo-dual-section {
       margin-bottom: 1.25rem;
     }
 
-    .dropzone-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #334155;
-      margin-bottom: 6px;
-    }
-
-    .dropzone-card {
-      border: 2px dashed #cbd5e1;
-      border-radius: 12px;
-      background: #f8fafc;
-      padding: 1.25rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .dropzone-card:hover, .dropzone-card.dragover {
-      border-color: var(--primary-color, #18d600);
-      background: #f0fdf4;
-      box-shadow: 0 0 0 3px rgba(24, 214, 0, 0.12);
-    }
-
-    .dropzone-content {
+    .photo-section-header {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
     }
 
-    .upload-icon {
-      color: #64748b;
-      margin-bottom: 6px;
-      transition: transform 0.2s ease;
-    }
-
-    .dropzone-card:hover .upload-icon {
-      transform: translateY(-2px);
-      color: var(--primary-color, #18d600);
-    }
-
-    .drop-title {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 600;
+    .photo-section-title {
+      font-size: 13px;
+      font-weight: 700;
       color: #1e293b;
     }
 
-    .drop-sub {
-      margin: 2px 0 0 0;
-      font-size: 12px;
+    .photo-section-hint {
+      font-size: 11px;
       color: #64748b;
     }
 
-    .browse-link {
-      color: #0284c7;
-      font-weight: 600;
-      text-decoration: underline;
+    .photo-dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: stretch;
     }
 
-    .drop-hint {
-      display: block;
-      margin-top: 6px;
+    @media (max-width: 520px) {
+      .photo-dual-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .photo-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .current-photo-card {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .upload-photo-card {
+      background: #ffffff;
+    }
+
+    .photo-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      min-height: 22px;
+    }
+
+    .photo-chip {
       font-size: 11px;
-      color: #94a3b8;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
     }
 
-    .dropzone-preview {
+    .chip-current {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .chip-new {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .chip-ready {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .photo-media-box {
       position: relative;
       width: 100%;
-      height: 180px;
+      height: 125px;
       border-radius: 8px;
       overflow: hidden;
+      background: #0f172a;
     }
 
-    .dropzone-img {
+    .photo-img-fit {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
-    .dropzone-overlay {
+    .photo-media-caption {
       position: absolute;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.45);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding: 10px 12px;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    .dropzone-preview:hover .dropzone-overlay {
-      opacity: 1;
-    }
-
-    .change-hint {
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.75), transparent);
+      padding: 4px 8px;
       color: #ffffff;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 500;
     }
 
-    .btn-remove-drop {
-      background: #ef4444;
+    .photo-badge-ready {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(24, 214, 0, 0.5);
       color: #ffffff;
-      border: none;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
-      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
     }
 
-    .btn-remove-drop:hover {
-      background: #dc2626;
+    .btn-discard-photo {
+      background: transparent;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-discard-photo:hover {
+      background: #fee2e2;
+    }
+
+    .new-photo-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .new-photo-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+
+    .meta-name {
+      color: #1e293b;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 130px;
+    }
+
+    .meta-size {
+      color: #64748b;
+      font-size: 10px;
+    }
+
+    .btn-change-photo {
+      margin-top: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    .btn-change-photo:hover {
+      background: #e2e8f0;
+    }
+
+    /* Dropzone dentro de la tarjeta derecha */
+    .dropzone-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .dropzone-box:hover, .dropzone-box.dragover {
+      border-color: var(--primary-color, #18d600);
+      background: #f0fdf4;
+      box-shadow: 0 0 0 2px rgba(24, 214, 0, 0.15);
+    }
+
+    .dropzone-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 4px 6px;
+    }
+
+    .upload-icon-circle {
+      color: #64748b;
+      margin-bottom: 4px;
+      transition: all 0.2s;
+    }
+
+    .dropzone-box:hover .upload-icon-circle {
+      color: var(--primary-color, #18d600);
+      transform: translateY(-2px);
+    }
+
+    .drop-action-text {
+      font-size: 12px;
+      color: #1e293b;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .drop-sub-text {
+      font-size: 11px;
+      color: #64748b;
+      margin: 2px 0 0 0;
+    }
+
+    .browse-action {
+      color: #0284c7;
+      text-decoration: underline;
+      font-weight: 600;
+    }
+
+    .drop-specs-text {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 4px;
     }
 
     .form-grid {
@@ -1106,6 +1276,12 @@ export class SedesPageComponent implements OnInit {
 
   fotoPlaceholder = 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80';
   formFotoUrl = '';
+
+  // Previsualizaciones de fotografía: imagen que hay vs imagen que se subirá
+  fotoActualModal = signal<string>('');
+  nuevaFotoPreview = signal<string>('');
+  nuevaFotoNombre = signal<string>('');
+  nuevaFotoTamano = signal<string>('');
 
   form: SedeRequest = {
     nombre: '',
@@ -1198,6 +1374,10 @@ export class SedesPageComponent implements OnInit {
     this.limpiarAvisos();
     this.editandoId.set(null);
     this.formFotoUrl = '';
+    this.fotoActualModal.set(this.fotoPlaceholder);
+    this.nuevaFotoPreview.set('');
+    this.nuevaFotoNombre.set('');
+    this.nuevaFotoTamano.set('');
     this.form = {
       nombre: '',
       direccion: '',
@@ -1210,7 +1390,12 @@ export class SedesPageComponent implements OnInit {
   abrirModalEditar(sede: Sede): void {
     this.limpiarAvisos();
     this.editandoId.set(sede.idSede);
-    this.formFotoUrl = this.photoCache.get(sede.idSede) || sede.fotoUrl || '';
+    const fotoActual = this.obtenerFotoSede(sede);
+    this.fotoActualModal.set(fotoActual);
+    this.formFotoUrl = sede.fotoUrl || this.photoCache.get(sede.idSede) || '';
+    this.nuevaFotoPreview.set('');
+    this.nuevaFotoNombre.set('');
+    this.nuevaFotoTamano.set('');
     this.form = {
       nombre: sede.nombre,
       direccion: sede.direccion,
@@ -1256,27 +1441,39 @@ export class SedesPageComponent implements OnInit {
 
   async procesarArchivo(file: File): Promise<void> {
     try {
+      this.nuevaFotoNombre.set(file.name);
+      const tamano = file.size > 1024 * 1024
+        ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+        : (file.size / 1024).toFixed(1) + ' KB';
+      this.nuevaFotoTamano.set(tamano);
+
       const url = await this.storageService.subirArchivo(file, 'sedes');
+      this.nuevaFotoPreview.set(url);
       this.formFotoUrl = url;
     } catch (err) {
       console.error('Error al procesar la foto de la sede:', err);
     }
   }
 
-  quitarFoto(): void {
-    this.formFotoUrl = '';
+  quitarNuevaFoto(): void {
+    this.nuevaFotoPreview.set('');
+    this.nuevaFotoNombre.set('');
+    this.nuevaFotoTamano.set('');
+    this.formFotoUrl = this.editandoId() ? (this.fotoActualModal() || '') : '';
   }
 
   guardarSede(): void {
     this.limpiarAvisos();
     this.guardando.set(true);
 
+    const fotoFinal = this.formFotoUrl || (this.editandoId() ? this.fotoActualModal() : this.fotoPlaceholder);
+
     const id = this.editandoId();
     if (id === null) {
       this.service.crear(this.form).subscribe({
         next: (nueva) => {
-          if (this.formFotoUrl) {
-            this.photoCache.set(nueva.idSede, this.formFotoUrl);
+          if (fotoFinal) {
+            this.photoCache.set(nueva.idSede, fotoFinal);
           }
           this.guardando.set(false);
           this.cerrarModal();
@@ -1291,8 +1488,8 @@ export class SedesPageComponent implements OnInit {
     } else {
       this.service.actualizar(id, this.form).subscribe({
         next: (act) => {
-          if (this.formFotoUrl) {
-            this.photoCache.set(act.idSede, this.formFotoUrl);
+          if (fotoFinal) {
+            this.photoCache.set(act.idSede, fotoFinal);
           }
           this.guardando.set(false);
           this.cerrarModal();
