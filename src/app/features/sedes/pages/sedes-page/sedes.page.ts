@@ -19,7 +19,7 @@ import { SupabaseStorageService } from '../../../../core/services/supabase-stora
     >
       <button type="button" class="btn-primary" (click)="abrirModalCrear()">
         <app-icon name="plus" [size]="18"></app-icon>
-        <span>+ Nueva Sede</span>
+        <span>Nueva Sede</span>
       </button>
     </app-page-header>
 
