@@ -10,11 +10,11 @@ export class AuthService {
 
   constructor(private router: Router) {}
 
-  login(user: User, token: string): void {
+  login(user: User, token: string, redirectUrl?: string): void {
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user_data', JSON.stringify(user));
     this.currentUser.set(user);
-    this.router.navigate(['/app/dashboard']);
+    this.router.navigate([redirectUrl || '/app/dashboard']);
   }
 
   logout(): void {

@@ -5,6 +5,17 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { environment } from '../../../../../environments/environment';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
+export interface DemoRole {
+  nombre: string;
+  rol: string;
+  email: string;
+  password: string;
+  ruta: string;
+  rutaCorta: string;
+  icono: string;
+  color: string;
+}
+
 @Component({
   selector: 'app-login-page',
   standalone: true,
@@ -22,6 +33,36 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
           <p class="login-subtitle">
             Bienvenido a la plataforma de gestión <strong>EnRuta</strong>.
           </p>
+
+          <!-- ACCESOS DE PRUEBA RÁPIDA (1-CLICK) -->
+          <div class="demo-access-container">
+            <div class="demo-access-header">
+              <span class="zap-icon">
+                <app-icon name="zap" [size]="14"></app-icon>
+              </span>
+              <span>ACCESOS DE PRUEBA RÁPIDA (1-CLICK):</span>
+            </div>
+
+            <div class="demo-cards-grid">
+              @for (demo of rolesDemo; track demo.rol) {
+                <button
+                  type="button"
+                  class="demo-card"
+                  [class.active]="username === demo.email"
+                  (click)="seleccionarDemo(demo)"
+                  [attr.aria-label]="'Ingresar como ' + demo.nombre"
+                >
+                  <div class="demo-card-head">
+                    <span class="demo-icon" [style.color]="demo.color">
+                      <app-icon [name]="demo.icono" [size]="15"></app-icon>
+                    </span>
+                    <span class="demo-title" [style.color]="demo.color">{{ demo.nombre }}</span>
+                  </div>
+                  <span class="demo-route">{{ demo.rutaCorta }}</span>
+                </button>
+              }
+            </div>
+          </div>
 
           <!-- ALERTA DE ERROR -->
           @if (error) {
@@ -155,11 +196,11 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 
     .form-container {
       width: 100%;
-      max-width: 440px;
+      max-width: 480px;
     }
 
     .login-brand-header {
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .login-logo-img {
@@ -171,21 +212,115 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
 
     .login-title {
       color: #ffffff;
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 800;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       letter-spacing: -0.5px;
     }
 
     .login-subtitle {
       color: #94a3b8;
-      font-size: 15px;
-      margin-bottom: 32px;
+      font-size: 14px;
+      margin-bottom: 22px;
     }
 
     .login-subtitle strong {
       color: #18d600;
       font-weight: 600;
+    }
+
+    /* ── ACCESOS DE PRUEBA RÁPIDA ── */
+    .demo-access-container {
+      margin-bottom: 22px;
+      padding: 14px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+    }
+
+    .demo-access-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #f59e0b;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      user-select: none;
+    }
+
+    .demo-access-header .zap-icon {
+      display: flex;
+      align-items: center;
+      color: #f59e0b;
+    }
+
+    .demo-cards-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .demo-card {
+      flex: 1 1 calc(33.333% - 8px);
+      min-width: 110px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 9px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+    }
+
+    .demo-card:hover {
+      background: #24344d;
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .demo-card.active {
+      border-color: #18d600;
+      background: rgba(24, 214, 0, 0.08);
+      box-shadow: 0 0 0 1px #18d600, 0 4px 12px rgba(24, 214, 0, 0.15);
+    }
+
+    .demo-card-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .demo-icon {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .demo-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .demo-route {
+      color: #94a3b8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      padding-left: 21px;
+      line-height: 1;
     }
 
     /* ALERTA DE ERROR */
@@ -198,7 +333,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
       border: 1px solid rgba(239, 68, 68, 0.3);
       border-left: 4px solid #ef4444;
       border-radius: 10px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
     .alert-icon {
@@ -222,7 +357,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
     .login-form {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
     }
 
     .form-group {
@@ -247,7 +382,7 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
     .input-wrapper input[type="text"],
     .input-wrapper input[type="password"] {
       width: 100%;
-      padding: 14px 16px;
+      padding: 13px 16px;
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
       border-radius: 10px;
       background-color: #0b1120 !important;
@@ -338,11 +473,11 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
       color: #052e16;
       border: none;
       border-radius: 10px;
-      padding: 15px;
+      padding: 14px;
       font-size: 15px;
       font-weight: 800;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -395,17 +530,6 @@ import { IconComponent } from '../../../../shared/components/icon/icon.component
       object-fit: contain;
       display: block;
       filter: drop-shadow(0 4px 12px rgba(24, 214, 0, 0.25));
-    }
-
-    .version-tag {
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: rgba(24, 214, 0, 0.15);
-      border: 1px solid rgba(24, 214, 0, 0.3);
-      color: #18d600;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
     }
 
     .brand-title {
@@ -506,26 +630,98 @@ export class LoginPageComponent {
   showPassword = false;
   remember = false;
 
+  readonly rolesDemo: DemoRole[] = [
+    {
+      nombre: 'Admin',
+      rol: 'ADMIN',
+      email: 'admin@distribucion.com',
+      password: 'password123',
+      ruta: '/app/dashboard',
+      rutaCorta: '/dashboard',
+      icono: 'shield',
+      color: '#f59e0b',
+    },
+    {
+      nombre: 'Supervisor',
+      rol: 'SUPERVISOR',
+      email: 'supervisor@distribucion.com',
+      password: 'password123',
+      ruta: '/app/pedidos',
+      rutaCorta: '/pedidos',
+      icono: 'check-circle',
+      color: '#06b6d4',
+    },
+    {
+      nombre: 'Almacenero',
+      rol: 'ALMACENERO',
+      email: 'almacen@distribucion.com',
+      password: 'password123',
+      ruta: '/app/inventory',
+      rutaCorta: '/inventory',
+      icono: 'package',
+      color: '#10b981',
+    },
+    {
+      nombre: 'Conductor',
+      rol: 'CONDUCTOR',
+      email: 'conductor@distribucion.com',
+      password: 'password123',
+      ruta: '/app/distribution',
+      rutaCorta: '/distribution',
+      icono: 'truck',
+      color: '#818cf8',
+    },
+    {
+      nombre: 'Cliente',
+      rol: 'CLIENTE',
+      email: 'cliente@distribucion.com',
+      password: 'password123',
+      ruta: '/app/pedidos',
+      rutaCorta: '/pedidos',
+      icono: 'user',
+      color: '#f43f5e',
+    },
+  ];
+
   private authService = inject(AuthService);
   private http = inject(HttpClient);
 
-  onLogin(): void {
+  seleccionarDemo(demo: DemoRole): void {
+    this.username = demo.email;
+    this.password = demo.password;
+    this.error = '';
+    this.onLogin(demo.ruta);
+  }
+
+  onLogin(targetRoute?: string): void {
     if (!this.username || !this.password) {
       return;
     }
     this.error = '';
     this.cargando = true;
     const body = { email: this.username.trim(), password: this.password };
-    this.http.post<{ accessToken: string }>(`${environment.apiUrl}/auth/login`, body).subscribe({
+    this.http.post<{ accessToken: string; rol?: string; correo?: string; nombreCompleto?: string }>(
+      `${environment.apiUrl}/auth/login`,
+      body
+    ).subscribe({
       next: res => {
         this.cargando = false;
+        const role = res.rol || 'ADMIN';
+        const defaultRouteByRole: Record<string, string> = {
+          ADMIN: '/app/dashboard',
+          SUPERVISOR: '/app/pedidos',
+          ALMACENERO: '/app/inventory',
+          CONDUCTOR: '/app/distribution',
+          CLIENTE: '/app/pedidos',
+        };
+        const redirect = targetRoute || defaultRouteByRole[role] || '/app/dashboard';
         this.authService.login({
           id: '0',
           username: body.email,
-          email: body.email,
-          fullName: body.email,
-          role: 'ADMIN'
-        }, res.accessToken);
+          email: res.correo || body.email,
+          fullName: res.nombreCompleto || body.email,
+          role: role,
+        }, res.accessToken, redirect);
       },
       error: (err: HttpErrorResponse) => {
         this.cargando = false;
