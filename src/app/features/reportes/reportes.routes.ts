@@ -21,4 +21,14 @@ export const reportesRoutes: Routes = [
     loadComponent: () =>
       import('./pages/reporte-entregas-page/reporte-entregas.page').then(m => m.ReporteEntregasPageComponent),
   },
+  {
+    path: 'flota',
+    loadComponent: () =>
+      import('./pages/reporte-flota-page/reporte-flota.page').then(m => m.ReporteFlotaPageComponent),
+  },
+  {
+    path: 'productividad',
+    redirectTo: 'flota',
+    pathMatch: 'full',
+  },
 ];

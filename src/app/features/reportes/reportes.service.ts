@@ -17,6 +17,14 @@ import {
   FiltrosReporteEntrega,
   ReporteEntrega,
 } from './reporte-entrega.model';
+import {
+  FiltrosReporteFlota,
+  ReporteProductividadFlota,
+} from './reporte-flota.model';
+import {
+  ConductorOpcion,
+  VehiculoOpcion,
+} from '../programacion-rutas/programacion-ruta.model';
 
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
@@ -24,6 +32,7 @@ export class ReportesService {
   private baseInventario = `${environment.apiUrl}/reportes/inventario`;
   private basePedidos = `${environment.apiUrl}/reportes/pedidos`;
   private baseEntregas = `${environment.apiUrl}/reportes/entregas`;
+  private baseFlota = `${environment.apiUrl}/reportes/flota`;
 
   // === REPORTE DE INVENTARIO (RF-22) ===
   inventario(filtros: FiltrosReporte): Observable<ReporteInventario> {
@@ -69,6 +78,26 @@ export class ReportesService {
     });
   }
 
+  // === REPORTE DE PRODUCTIVIDAD DE FLOTA (RF-25) ===
+  productividadFlota(filtros: FiltrosReporteFlota): Observable<ReporteProductividadFlota> {
+    return this.http.get<ReporteProductividadFlota>(this.baseFlota, { params: this.paramsFlota(filtros) });
+  }
+
+  descargarProductividadFlota(formato: 'pdf' | 'excel', filtros: FiltrosReporteFlota): Observable<Blob> {
+    return this.http.get(`${this.baseFlota}/${formato}`, {
+      params: this.paramsFlota(filtros),
+      responseType: 'blob',
+    });
+  }
+
+  vehiculos(): Observable<VehiculoOpcion[]> {
+    return this.http.get<VehiculoOpcion[]>(`${environment.apiUrl}/vehiculos`);
+  }
+
+  conductores(): Observable<ConductorOpcion[]> {
+    return this.http.get<ConductorOpcion[]>(`${environment.apiUrl}/conductores`);
+  }
+
   private paramsInventario(filtros: FiltrosReporte): HttpParams {
     let params = new HttpParams();
     if (filtros.idAlmacen) {
@@ -107,6 +136,23 @@ export class ReportesService {
     }
     if (filtros.idEstado !== undefined && filtros.idEstado !== null) {
       params = params.set('idEstado', filtros.idEstado.toString());
+    }
+    return params;
+  }
+
+  private paramsFlota(filtros: FiltrosReporteFlota): HttpParams {
+    let params = new HttpParams();
+    if (filtros.fechaInicio) {
+      params = params.set('fechaInicio', filtros.fechaInicio);
+    }
+    if (filtros.fechaFin) {
+      params = params.set('fechaFin', filtros.fechaFin);
+    }
+    if (filtros.idVehiculo !== undefined && filtros.idVehiculo !== null) {
+      params = params.set('idVehiculo', filtros.idVehiculo.toString());
+    }
+    if (filtros.idConductor !== undefined && filtros.idConductor !== null) {
+      params = params.set('idConductor', filtros.idConductor.toString());
     }
     return params;
   }
