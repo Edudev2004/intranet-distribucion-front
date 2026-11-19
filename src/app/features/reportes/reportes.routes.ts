@@ -16,4 +16,9 @@ export const reportesRoutes: Routes = [
     loadComponent: () =>
       import('./pages/reporte-pedidos-page/reporte-pedidos.page').then(m => m.ReportePedidosPageComponent),
   },
+  {
+    path: 'entregas',
+    loadComponent: () =>
+      import('./pages/reporte-entregas-page/reporte-entregas.page').then(m => m.ReporteEntregasPageComponent),
+  },
 ];
