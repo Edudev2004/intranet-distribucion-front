@@ -34,7 +34,7 @@ import {
     @if (mostrarForm()) {
       <div class="content-card form-card">
         <div class="form-header">
-          <h3>📸 Registrar Incidencia con Evidencia</h3>
+          <h3>Registrar Incidencia con Evidencia</h3>
           <span class="badge-bucket">Supabase Bucket: evidencias-entregas</span>
         </div>
         <form #f="ngForm" (ngSubmit)="registrar()" class="form-grid">
@@ -59,13 +59,13 @@ import {
           <!-- Adjuntar Foto de Evidencia -->
           <div class="full evidence-section">
             <label class="evidence-title">
-              📷 Fotografía de Evidencia (Fachada cerrada, daño, rechazo)
+              Fotografía de Evidencia (Fachada cerrada, daño, rechazo)
             </label>
             <div class="evidence-grid">
               <div class="upload-box">
                 <input type="file" accept="image/*" (change)="onArchivoSeleccionado($event)" id="fileIncidencia" class="file-input" />
                 <label for="fileIncidencia" class="file-label">
-                  📁 Subir foto de evidencia desde el dispositivo
+                  Subir foto de evidencia desde el dispositivo
                 </label>
                 <div class="presets-row">
                   <span class="preset-label">Presets de prueba:</span>
@@ -156,7 +156,7 @@ import {
                     @if (i.evidenciaUrl) {
                       <div class="thumbnail-wrapper" (click)="abrirModalFoto(i)">
                         <img [src]="i.evidenciaUrl" alt="Foto evidencia" class="thumb-img" (error)="onThumbError($event)" />
-                        <span class="thumb-hint">🔍 Ver</span>
+                        <span class="thumb-hint">Ver</span>
                       </div>
                     } @else {
                       <span class="no-photo">Sin foto</span>
