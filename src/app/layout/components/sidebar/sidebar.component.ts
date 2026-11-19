@@ -439,6 +439,7 @@ export class SidebarComponent {
       title: 'Ventas & Facturación',
       collapsed: false,
       items: [
+        { label: 'Clientes', route: '/app/clientes', icon: 'users' },
         { label: 'Pedidos', route: '/app/pedidos', icon: 'orders' },
         { label: 'Facturación & Guías', route: '/app/facturacion', icon: 'invoice' }
       ]
