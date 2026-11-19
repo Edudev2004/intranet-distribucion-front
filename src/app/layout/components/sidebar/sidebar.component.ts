@@ -2,11 +2,18 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
-interface NavItem {
+export interface NavItem {
   label: string;
   route: string;
   icon: string;
   badge?: string;
+}
+
+export interface NavSection {
+  id: string;
+  title: string;
+  collapsed?: boolean;
+  items: NavItem[];
 }
 
 @Component({
@@ -40,26 +47,65 @@ interface NavItem {
       <div class="sidebar-scroll">
         <nav class="sidebar-nav">
           @if (!collapsed) {
-            <span class="nav-section-title">OPERACIONES & GESTIÓN</span>
-          }
+            <!-- Módulos organizados en Secciones Desplegables -->
+            @for (section of sections; track section.id) {
+              <div class="nav-section">
+                <button
+                  type="button"
+                  class="section-header-btn"
+                  (click)="toggleSection(section)"
+                  [attr.aria-expanded]="!section.collapsed"
+                >
+                  <span class="section-title">{{ section.title }}</span>
+                  <app-icon
+                    [name]="section.collapsed ? 'chevron-right' : 'chevron-down'"
+                    [size]="13"
+                    class="section-chevron"
+                  ></app-icon>
+                </button>
 
-          @for (item of navItems; track item.route) {
-            <a
-              [routerLink]="item.route"
-              routerLinkActive="active"
-              class="nav-item"
-              [attr.title]="collapsed ? item.label : null"
-            >
-              <div class="item-icon">
-                <app-icon [name]="item.icon" [size]="19"></app-icon>
-              </div>
-              @if (!collapsed) {
-                <span class="nav-label">{{ item.label }}</span>
-                @if (item.badge) {
-                  <span class="nav-badge">{{ item.badge }}</span>
+                @if (!section.collapsed) {
+                  <div class="section-items">
+                    @for (item of section.items; track item.route) {
+                      <a
+                        [routerLink]="item.route"
+                        routerLinkActive="active"
+                        class="nav-item"
+                      >
+                        <div class="item-icon">
+                          <app-icon [name]="item.icon" [size]="18"></app-icon>
+                        </div>
+                        <span class="nav-label">{{ item.label }}</span>
+                        @if (item.badge) {
+                          <span class="nav-badge">{{ item.badge }}</span>
+                        }
+                      </a>
+                    }
+                  </div>
                 }
+              </div>
+            }
+          } @else {
+            <!-- Modo Colapsado (Íconos agrupados con divisores) -->
+            @for (section of sections; track section.id; let last = $last) {
+              <div class="collapsed-section">
+                @for (item of section.items; track item.route) {
+                  <a
+                    [routerLink]="item.route"
+                    routerLinkActive="active"
+                    class="nav-item compact"
+                    [attr.title]="item.label"
+                  >
+                    <div class="item-icon">
+                      <app-icon [name]="item.icon" [size]="19"></app-icon>
+                    </div>
+                  </a>
+                }
+              </div>
+              @if (!last) {
+                <div class="collapsed-divider"></div>
               }
-            </a>
+            }
           }
         </nav>
       </div>
@@ -138,26 +184,6 @@ interface NavItem {
       flex-shrink: 0;
     }
 
-    .brand-info {
-      display: flex;
-      flex-direction: column;
-      line-height: 1.15;
-    }
-
-    .brand-title {
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: 0.05em;
-      color: #ffffff;
-    }
-
-    .brand-sub {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: #18d600;
-    }
-
     .collapse-btn {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -190,34 +216,84 @@ interface NavItem {
     .sidebar-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 18px 0;
+      padding: 14px 0;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
     }
 
     .sidebar-nav {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding: 0 12px;
+      gap: 10px;
+      padding: 0 10px;
     }
 
-    .nav-section-title {
-      font-size: 11px;
+    /* Secciones Organizacionales */
+    .nav-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .section-header-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px 6px;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .section-header-btn:hover {
+      color: #cbd5e1;
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .section-title {
+      font-size: 10.5px;
       font-weight: 700;
-      color: #475569;
       letter-spacing: 0.08em;
-      padding: 10px 14px 6px;
+      text-transform: uppercase;
     }
 
+    .section-chevron {
+      color: #475569;
+      transition: transform 0.2s ease;
+    }
+
+    .section-header-btn:hover .section-chevron {
+      color: #94a3b8;
+    }
+
+    .section-items {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* Elementos de Navegación */
     .nav-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 11px 14px;
+      padding: 9px 12px;
       color: #94a3b8;
       text-decoration: none;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 500;
-      border-radius: 9px;
+      border-radius: 8px;
       transition: all 0.18s ease;
       white-space: nowrap;
     }
@@ -235,11 +311,11 @@ interface NavItem {
     }
 
     .nav-badge {
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 999px;
       background: rgba(24, 214, 0, 0.15);
       color: #18d600;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
     }
 
@@ -252,8 +328,8 @@ interface NavItem {
     .nav-item.active {
       background-color: #18d600;
       color: #052e16;
-      font-weight: 800;
-      box-shadow: 0 4px 14px rgba(24, 214, 0, 0.35);
+      font-weight: 750;
+      box-shadow: 0 4px 12px rgba(24, 214, 0, 0.3);
       transform: none;
     }
 
@@ -261,19 +337,32 @@ interface NavItem {
       color: #052e16;
     }
 
-    .sidebar.collapsed .nav-item {
-      justify-content: center;
-      padding: 12px 0;
-      border-radius: 10px;
+    /* Colapsado */
+    .collapsed-section {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
     }
 
-    .sidebar.collapsed .nav-item:hover {
+    .nav-item.compact {
+      justify-content: center;
+      padding: 11px 0;
+      border-radius: 9px;
+    }
+
+    .nav-item.compact:hover {
       transform: none;
+    }
+
+    .collapsed-divider {
+      height: 1px;
+      background-color: rgba(255, 255, 255, 0.07);
+      margin: 4px 12px;
     }
 
     /* ── FOOTER ── */
     .sidebar-footer {
-      padding: 16px 18px;
+      padding: 14px 18px;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
       background-color: rgba(15, 23, 42, 0.4);
     }
@@ -313,7 +402,7 @@ interface NavItem {
 
     .sidebar.collapsed .sidebar-footer {
       justify-content: center;
-      padding: 16px 0;
+      padding: 14px 0;
     }
 
     .sidebar.collapsed .status-indicator {
@@ -325,25 +414,64 @@ export class SidebarComponent {
   @Input() collapsed = false;
   @Output() collapsedChange = new EventEmitter<boolean>();
 
-  navItems: NavItem[] = [
-    { label: 'Dashboard', route: '/app/dashboard', icon: 'dashboard' },
-    { label: 'Sedes', route: '/app/sedes', icon: 'warehouse' },
-    { label: 'Usuarios', route: '/app/usuarios', icon: 'users' },
-    { label: 'Programación de Rutas', route: '/app/programacion-rutas', icon: 'truck' },
-    { label: 'Almacenes', route: '/app/almacenes', icon: 'warehouse' },
-    { label: 'Categorías', route: '/app/categorias', icon: 'tag' },
-    { label: 'Pedidos', route: '/app/pedidos', icon: 'orders' },
-    { label: 'Facturación', route: '/app/facturacion', icon: 'invoice' },
-    { label: 'Despachos & Rutas', route: '/app/distribution', icon: 'truck' },
-    { label: 'Incidencias', route: '/app/incidencias', icon: 'alert' },
-    { label: 'Inventario', route: '/app/inventory', icon: 'inventory' },
-    { label: 'Flota & Choferes', route: '/app/fleet', icon: 'truck' },
-    { label: 'Mantenimiento', route: '/app/mantenimiento', icon: 'wrench' },
-    { label: 'Reportes', route: '/app/reportes', icon: 'reports' }
+  sections: NavSection[] = [
+    {
+      id: 'principal',
+      title: 'Principal',
+      collapsed: false,
+      items: [
+        { label: 'Dashboard', route: '/app/dashboard', icon: 'dashboard' }
+      ]
+    },
+    {
+      id: 'almacen',
+      title: 'Almacén & Stock',
+      collapsed: false,
+      items: [
+        { label: 'Sedes', route: '/app/sedes', icon: 'warehouse' },
+        { label: 'Almacenes', route: '/app/almacenes', icon: 'warehouse' },
+        { label: 'Categorías', route: '/app/categorias', icon: 'tag' },
+        { label: 'Control de Inventario', route: '/app/inventory', icon: 'inventory' }
+      ]
+    },
+    {
+      id: 'ventas',
+      title: 'Ventas & Facturación',
+      collapsed: false,
+      items: [
+        { label: 'Pedidos', route: '/app/pedidos', icon: 'orders' },
+        { label: 'Facturación & Guías', route: '/app/facturacion', icon: 'invoice' }
+      ]
+    },
+    {
+      id: 'distribucion',
+      title: 'Distribución & Logística',
+      collapsed: false,
+      items: [
+        { label: 'Programación de Rutas', route: '/app/programacion-rutas', icon: 'truck' },
+        { label: 'Despachos & Rutas', route: '/app/distribution', icon: 'truck' },
+        { label: 'Incidencias', route: '/app/incidencias', icon: 'alert' },
+        { label: 'Flota & Choferes', route: '/app/fleet', icon: 'truck' },
+        { label: 'Mantenimiento', route: '/app/mantenimiento', icon: 'wrench' }
+      ]
+    },
+    {
+      id: 'admin',
+      title: 'Administración & Analítica',
+      collapsed: false,
+      items: [
+        { label: 'Usuarios & Roles', route: '/app/usuarios', icon: 'users' },
+        { label: 'Reportes', route: '/app/reportes', icon: 'reports' }
+      ]
+    }
   ];
 
   toggleCollapse(): void {
     this.collapsed = !this.collapsed;
     this.collapsedChange.emit(this.collapsed);
+  }
+
+  toggleSection(section: NavSection): void {
+    section.collapsed = !section.collapsed;
   }
 }
