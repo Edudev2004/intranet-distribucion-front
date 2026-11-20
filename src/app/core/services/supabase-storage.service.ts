@@ -52,6 +52,33 @@ export class SupabaseStorageService {
    * para vista previa instantánea y funcionamiento continuo del sistema.
    */
   async subirArchivo(file: File, bucket = 'sedes'): Promise<string> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${environment.apiUrl}/storage/upload?bucket=${bucket}`, {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.url) {
+          return data.url;
+        }
+      }
+      console.warn('Fallo en endpoint backend de almacenamiento, probando conexion directa...');
+    } catch (err) {
+      console.warn('Error al subir via backend:', err);
+    }
+
     if (this.config.anonKey && this.config.anonKey.trim() !== '') {
       try {
         const fileExt = file.name.split('.').pop() || 'jpg';

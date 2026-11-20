@@ -1383,6 +1383,7 @@ export class SedesPageComponent implements OnInit {
       direccion: '',
       idResponsable: null,
       activo: true,
+      fotoUrl: '',
     };
     this.mostrarModal.set(true);
   }
@@ -1401,6 +1402,7 @@ export class SedesPageComponent implements OnInit {
       direccion: sede.direccion,
       idResponsable: sede.idResponsable,
       activo: sede.activo,
+      fotoUrl: sede.fotoUrl || '',
     };
     this.mostrarModal.set(true);
   }
@@ -1467,6 +1469,7 @@ export class SedesPageComponent implements OnInit {
     this.guardando.set(true);
 
     const fotoFinal = this.formFotoUrl || (this.editandoId() ? this.fotoActualModal() : this.fotoPlaceholder);
+    this.form.fotoUrl = fotoFinal || undefined;
 
     const id = this.editandoId();
     if (id === null) {
