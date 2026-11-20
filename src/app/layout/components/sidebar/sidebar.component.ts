@@ -28,9 +28,7 @@ export interface NavSection {
           @if (!collapsed) {
             <img src="enruta.webp" alt="EnRuta" class="sidebar-logo-img" />
           } @else {
-            <div class="brand-icon-wrapper">
-              <app-icon name="truck" [size]="20"></app-icon>
-            </div>
+            <img src="EnRuta-Logotipo.webp" alt="EnRuta" class="sidebar-logo-collapsed" />
           }
         </div>
         <button
@@ -171,17 +169,22 @@ export interface NavSection {
       display: block;
     }
 
-    .brand-icon-wrapper {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: rgba(24, 214, 0, 0.15);
-      border: 1px solid rgba(24, 214, 0, 0.3);
-      color: #18d600;
-      display: flex;
-      align-items: center;
+    .sidebar-logo-collapsed {
+      max-height: 40px;
+      max-width: 44px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 2px 8px rgba(24, 214, 0, 0.25));
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar.collapsed .brand-box {
       justify-content: center;
-      flex-shrink: 0;
+      width: 100%;
+    }
+
+    .sidebar.collapsed .sidebar-header:hover .sidebar-logo-collapsed {
+      transform: scale(1.08);
     }
 
     .collapse-btn {
