@@ -1,6 +1,9 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { AlmacenesService } from '../../almacenes.service';
 import {
@@ -14,7 +17,7 @@ import {
 @Component({
   selector: 'app-almacenes-page',
   standalone: true,
-  imports: [FormsModule, PageHeaderComponent],
+  imports: [CommonModule, FormsModule, DecimalPipe, PageHeaderComponent],
   template: `
     <app-page-header title="Gestión de Almacenes" subtitle="Registro, capacidad y ubicación de los almacenes por sede">
       <button class="btn-primary" (click)="nuevo()">+ Nuevo almacén</button>
@@ -51,7 +54,19 @@ import {
             </select>
           </label>
           <label>Capacidad máxima
-            <input name="capacidadMaxima" type="number" min="0.01" step="any" [(ngModel)]="form.capacidadMaxima" required />
+            <div class="input-with-unit">
+              <input name="capacidadMaxima" type="number" min="0.01" step="any" [(ngModel)]="form.capacidadMaxima" placeholder="Ej: 60,000" required />
+              <span class="unit-suffix">pallets</span>
+            </div>
+          </label>
+          <label>Unidad de medida
+            <select disabled title="Por el momento las capacidades se registran en pallets. Nuevas unidades estarán disponibles próximamente.">
+              <option selected>Pallets (pallets) [Por defecto]</option>
+              <option disabled>Unidades (und.) (Próximamente)</option>
+              <option disabled>Kilogramos (kg) (Próximamente)</option>
+              <option disabled>Metros cúbicos (m³) (Próximamente)</option>
+            </select>
+            <span class="hint-text">Capacidad registrada en pallets. Próximamente se integrará soporte para unidades adicionales.</span>
           </label>
           <label>Ubicación
             <input name="ubicacion" [(ngModel)]="form.ubicacion" maxlength="255" />
@@ -83,40 +98,58 @@ import {
         <thead>
           <tr>
             <th>ID</th><th>Nombre</th><th>Sede</th><th>Tipo</th>
-            <th>Capacidad</th><th>Ubicación</th><th>Estado</th><th>Acciones</th>
+            <th>Capacidad & Ocupación</th><th>Ubicación</th><th>Estado</th><th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-                      @if (cargando()) {
-              <tr>
-                <td colspan="8">
-                  <div class="loading-state">
-                    <div class="spinner"></div>
-                    <span>Cargando información...</span>
-                  </div>
-                </td>
-              </tr>
-            } @else {
-            @for (a of almacenes(); track a.idAlmacen) {
+          @if (cargando()) {
             <tr>
-              <td>{{ a.idAlmacen }}</td>
-              <td><strong>{{ a.nombre }}</strong></td>
-              <td>{{ a.sede }}</td>
-              <td>{{ a.tipoAlmacen }}</td>
-              <td>{{ a.capacidadMaxima }}</td>
-              <td>{{ a.ubicacion ?? '-' }}</td>
-              <td><span class="badge" [class.off]="!a.activo">{{ a.activo ? 'Activo' : 'Inactivo' }}</span></td>
-              <td class="row-actions">
-                <button (click)="verProductos(a)">Productos</button>
-                <button (click)="editar(a)">Editar</button>
-                <button class="danger" (click)="eliminar(a)">Eliminar</button>
+              <td colspan="8">
+                <div class="loading-state">
+                  <div class="spinner"></div>
+                  <span>Cargando información...</span>
+                </div>
               </td>
             </tr>
-          } @empty {
-                <tr><td colspan="8">No hay almacenes registrados.</td></tr>
-              }
+          } @else {
+            @for (a of almacenes(); track a.idAlmacen) {
+              <tr>
+                <td>{{ a.idAlmacen }}</td>
+                <td><strong>{{ a.nombre }}</strong></td>
+                <td>{{ a.sede }}</td>
+                <td>{{ a.tipoAlmacen }}</td>
+                <td>
+                  <div class="capacidad-cell">
+                    <div class="capacidad-row">
+                      <span class="capacidad-principal">
+                        <strong>{{ a.capacidadMaxima | number }}</strong> <span class="unidad">pallets</span>
+                      </span>
+                      <span class="chip-ocupacion" [ngClass]="getOcupacionClase(a)">
+                        {{ getPorcentajeOcupacion(a) }}%
+                      </span>
+                    </div>
+                    <div class="progress-track" [title]="'Ocupación: ' + getPorcentajeOcupacion(a) + '% (' + (getStockOcupado(a.idAlmacen) | number) + ' de ' + (a.capacidadMaxima | number) + ' pallets)'">
+                      <div class="progress-fill" [ngClass]="getOcupacionClase(a)" [style.width.%]="getPorcentajeOcupacion(a)"></div>
+                    </div>
+                    <div class="capacidad-sub">
+                      <span>{{ getStockOcupado(a.idAlmacen) | number }} ocupados</span>
+                      <span class="estado-ocupacion" [ngClass]="getOcupacionClase(a)">{{ getOcupacionEtiqueta(a) }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ a.ubicacion ?? '-' }}</td>
+                <td><span class="badge" [class.off]="!a.activo">{{ a.activo ? 'Activo' : 'Inactivo' }}</span></td>
+                <td class="row-actions">
+                  <button (click)="verProductos(a)">Productos</button>
+                  <button (click)="editar(a)">Editar</button>
+                  <button class="danger" (click)="eliminar(a)">Eliminar</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8">No hay almacenes registrados.</td></tr>
             }
-          </tbody>
+          }
+        </tbody>
       </table>
     </div>
 
@@ -131,7 +164,7 @@ import {
             @for (p of productos(); track p.idProducto) {
               <tr>
                 <td>{{ p.codigo }}</td><td>{{ p.producto }}</td>
-                <td>{{ p.categoria }}</td><td>{{ p.stockActual }}</td>
+                <td>{{ p.categoria }}</td><td>{{ p.stockActual | number }} pallets</td>
               </tr>
             } @empty {
               <tr><td colspan="4">Este almacén no tiene productos en inventario.</td></tr>
@@ -152,7 +185,7 @@ import {
     .actions { display: flex; gap: 0.5rem; }
     .toolbar { margin-bottom: 1rem; max-width: 280px; }
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+    .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; vertical-align: middle; }
     .data-table th { color: #475569; background: #f8fafc; font-weight: 600; }
     .row-actions { display: flex; gap: 0.4rem; }
     .row-actions button { padding: 0.25rem 0.6rem; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; }
@@ -162,6 +195,38 @@ import {
     .alert { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
     .alert.ok { background: #dcfce7; color: #166534; }
     .alert.err { background: #fee2e2; color: #991b1b; }
+
+    /* Capacidad & Ocupacion Styles */
+    .capacidad-cell { display: flex; flex-direction: column; gap: 0.35rem; min-width: 175px; }
+    .capacidad-row { display: flex; justify-content: space-between; align-items: baseline; }
+    .capacidad-principal { font-size: 0.88rem; color: #0f172a; }
+    .capacidad-principal strong { font-weight: 700; color: #0f172a; }
+    .unidad { color: #64748b; font-size: 0.8rem; font-weight: 500; margin-left: 2px; }
+    .chip-ocupacion { font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 999px; }
+    .chip-ocupacion.optimo { background: #dcfce7; color: #15803d; }
+    .chip-ocupacion.moderado { background: #fef3c7; color: #b45309; }
+    .chip-ocupacion.critico { background: #fee2e2; color: #b91c1c; }
+
+    .progress-track { height: 6px; background: #f1f5f9; border-radius: 999px; overflow: hidden; width: 100%; }
+    .progress-fill { height: 100%; border-radius: 999px; transition: width 0.3s ease; }
+    .progress-fill.optimo { background: #22c55e; }
+    .progress-fill.moderado { background: #f59e0b; }
+    .progress-fill.critico { background: #ef4444; }
+
+    .capacidad-sub { display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; }
+    .estado-ocupacion { font-weight: 600; }
+    .estado-ocupacion.optimo { color: #16a34a; }
+    .estado-ocupacion.moderado { color: #d97706; }
+    .estado-ocupacion.critico { color: #dc2626; }
+
+    .input-with-unit { position: relative; display: flex; align-items: center; }
+    .input-with-unit input { width: 100%; padding-right: 4.5rem; }
+    .unit-suffix { position: absolute; right: 0.75rem; font-size: 0.8rem; font-weight: 600; color: #64748b; pointer-events: none; }
+    .hint-text { font-size: 0.73rem; color: #94a3b8; margin-top: 0.25rem; line-height: 1.25; }
+
+    .loading-state { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 2rem; color: #64748b; }
+    .spinner { width: 20px; height: 20px; border: 2px solid #e2e8f0; border-top-color: #18d600; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   `],
 })
 export class AlmacenesPageComponent implements OnInit {
@@ -172,6 +237,7 @@ export class AlmacenesPageComponent implements OnInit {
   tipos = signal<TipoAlmacen[]>([]);
   productos = signal<ProductoAlmacen[]>([]);
   almacenSeleccionado = signal<Almacen | null>(null);
+  stockPorAlmacen = signal<Record<number, number>>({});
 
   cargando = signal(false);
   error = signal('');
@@ -200,12 +266,64 @@ export class AlmacenesPageComponent implements OnInit {
       next: data => {
         this.almacenes.set(data);
         this.cargando.set(false);
+        this.cargarStockOcupado(data);
       },
       error: err => {
         this.cargando.set(false);
         this.mostrarError(err, 'No se pudieron cargar los almacenes');
       },
     });
+  }
+
+  cargarStockOcupado(lista: Almacen[]): void {
+    if (!lista || lista.length === 0) {
+      this.stockPorAlmacen.set({});
+      return;
+    }
+
+    const peticiones = lista.map(a =>
+      this.service.productos(a.idAlmacen).pipe(
+        catchError(() => of([] as ProductoAlmacen[]))
+      )
+    );
+
+    forkJoin(peticiones).subscribe({
+      next: resultados => {
+        const mapa: Record<number, number> = {};
+        lista.forEach((a, index) => {
+          const prods = resultados[index] || [];
+          mapa[a.idAlmacen] = prods.reduce((acc, p) => acc + (p.stockActual || 0), 0);
+        });
+        this.stockPorAlmacen.set(mapa);
+      },
+    });
+  }
+
+  getStockOcupado(idAlmacen: number): number {
+    return this.stockPorAlmacen()[idAlmacen] ?? 0;
+  }
+
+  getPorcentajeOcupacion(a: Almacen): number {
+    if (!a.capacidadMaxima || a.capacidadMaxima <= 0) {
+      return 0;
+    }
+    const ocupado = this.getStockOcupado(a.idAlmacen);
+    const pct = (ocupado / a.capacidadMaxima) * 100;
+    return Math.min(100, Math.round(pct * 10) / 10);
+  }
+
+  getOcupacionClase(a: Almacen): 'optimo' | 'moderado' | 'critico' {
+    const pct = this.getPorcentajeOcupacion(a);
+    if (pct > 90) return 'critico';
+    if (pct >= 75) return 'moderado';
+    return 'optimo';
+  }
+
+  getOcupacionEtiqueta(a: Almacen): string {
+    const pct = this.getPorcentajeOcupacion(a);
+    if (pct > 90) return 'Saturado';
+    if (pct >= 75) return 'Alto';
+    return 'Disponible';
   }
 
   filtrar(idSede: number | null): void {
