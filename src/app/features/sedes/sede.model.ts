@@ -16,6 +16,7 @@ export interface SedeRequest {
   direccion: string;
   idResponsable: number | null;
   activo?: boolean;
+  fotoUrl?: string;
 }
 
 export interface ResponsableSede {
